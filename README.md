@@ -35,6 +35,13 @@ Current options are:
                             payload in IntPayload (default: 100)  
   -h,--help                show help
 ```
+An example run would be : 
+```bash 
+./bin/spark-submit --master yarn \
+--class com.ibm.crail.spark.tools.Parqgen parqgen-1.0.jar \
+-c IntWithPayload -C snappy -o /myfile.parquet -r 84 -s 42 
+```
+This will create 84 rows for `case class IntWithPayload` as `[Int, Array[Byte]]` with 42 bytes byte array, and save this as a parquet file format in `/myfile.parquet`.
 
 ## Contributions
 
