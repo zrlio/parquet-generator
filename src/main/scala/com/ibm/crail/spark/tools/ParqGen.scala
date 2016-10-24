@@ -37,7 +37,7 @@ object ParqGen {
     options.parse(args)
     val spark = SparkSession
       .builder()
-      .appName("Parquet Generator")
+      .appName("Spark SQL Parquet Generator")
       .config("spark.default.parallelism", options.getParalleism.toString)
       .getOrCreate()
 
@@ -48,36 +48,45 @@ object ParqGen {
 
     //FIXME: this is a stupid way of writing code, but I cannot template this with DS/scala
     if(options.getClassName.equalsIgnoreCase("ParquetExample")){
-      val base = new ListBuffer[ParquetExample]()
-      /* now we want to generate a loop and save the parquet file */
-      for (a <- 0 until options.getRows) {
-        base += ParquetExample(DataGenerator.getNextString(options.getVariableSize),
-          DataGenerator.getNextInt,
-          DataGenerator.getNextLong,
-          DataGenerator.getNextDouble,
-          DataGenerator.getNextString(options.getVariableSize),
-          DataGenerator.getNextFloat)
+      val inputRDD = spark.sparkContext.parallelize(0 until options.getParalleism, options.getParalleism).flatMap { p =>
+        val base = new ListBuffer[ParquetExample]()
+        /* now we want to generate a loop and save the parquet file */
+        for (a <- 0 until options.getRows) {
+          base += ParquetExample(DataGenerator.getNextString(options.getVariableSize),
+            DataGenerator.getNextInt,
+            DataGenerator.getNextLong,
+            DataGenerator.getNextDouble,
+            DataGenerator.getNextString(options.getVariableSize),
+            DataGenerator.getNextFloat)
+        }
+        base
       }
-      base.toDS().write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
+      inputRDD.toDS().write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
     } else if (options.getClassName.equalsIgnoreCase("IntWithPayload")){
-      val base = new ListBuffer[IntWithPayload]()
-      /* now we want to generate a loop and save the parquet file */
-      for (a <- 0 until options.getRows) {
-        base += IntWithPayload(DataGenerator.getNextInt,
-          DataGenerator.getNextByteArray(options.getVariableSize))
+      val inputRDD = spark.sparkContext.parallelize(0 until options.getParalleism, options.getParalleism).flatMap { p =>
+        val base = new ListBuffer[IntWithPayload]()
+        /* now we want to generate a loop and save the parquet file */
+        for (a <- 0 until options.getRows) {
+          base += IntWithPayload(DataGenerator.getNextInt,
+            DataGenerator.getNextByteArray(options.getVariableSize))
+        }
+        base
       }
-      base.toDS().write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
+      inputRDD.toDS().write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
     }else {
       throw new Exception("Illegal class name: " + options.getClassName)
     }
+    println("ParqGen: Data written out sucessfully to " + options.getOutput)
 
     /* now we read it back and check */
     val inputDS = spark.read.parquet(options.getOutput)
     val items = inputDS.count()
-    System.out.println("----------------------------------------------------------------")
-    System.out.println(" Total number of rows are : " + items)
+    val partitions = SparkTools.countNumPartitions(spark, inputDS)
     inputDS.show()
-    require(items == options.getRows)
+    println("----------------------------------------------------------------")
+    println("RESULTS: file " + options.getOutput+ " contains " + items + " rows in " + partitions + " partitions")
+    println("----------------------------------------------------------------")
+    require(items == (options.getRows * options.getParalleism))
     spark.stop()
   }
 }
