@@ -23,11 +23,13 @@ package com.ibm.crail.spark.tools;
 
 import org.apache.commons.cli.*;
 
+import java.io.Serializable;
+
 
 /**
  * Created by atr on 9/30/16.
  */
-public class ParseOptions {
+public class ParseOptions implements Serializable {
     private Options options;
     private int rows;
     private String output;
@@ -49,13 +51,13 @@ public class ParseOptions {
 
         options = new Options();
         options.addOption("h", "help", false, "show help");
-        options.addOption("r", "rows", true, "<int> number of rows (default: " + this.rows+")");
+        options.addOption("r", "rows", true, "<int> number of rows per partition (default: " + this.rows+")");
         options.addOption("c", "case", true, "case class schema currently supported are: \n" +
                 "                             ParquetExample (default), IntWithPayload. \n" +
                 "                             These classes are in ./schema/ in src.");
         options.addOption("f", "caseFile", true, "<String> case class file to compile and load (NYI)");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
-        options.addOption("p", "parallelism", true, "<int> default parallelism/partitions");
+        options.addOption("p", "parallelism", true, "<int> number of partitions (default: " + this.paralleism+")");
         options.addOption("s", "size", true, "<int> any variable payload size, string or payload in IntPayload (default: " + this.variableSize+")");
         options.addOption("C", "compress", true, "<String> compression type, valid values are: uncompressed, snappy, gzip, lzo (default: "
                 + this.compressionType+")");

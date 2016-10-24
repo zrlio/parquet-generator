@@ -26,7 +26,7 @@ import scala.util.Random
 /**
   * Created by atr on 10/5/16.
   */
-object DataGenerator {
+object DataGenerator extends Serializable {
   val random = new Random(System.nanoTime())
 
   def getNextString(size: Int):String = {
