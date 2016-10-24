@@ -28,9 +28,9 @@ Current options are:
                            uncompressed)
   -f,--caseFile <arg>      <String> case class file to compile and load (NYI)  
   -o,--output <arg>        <String> the output file name (default:
-                           /test.parquet)
-  -p,--parallelism <arg>   <int> default parallelism (NYI)
-  -r,--rows <arg>          <int> number of rows (default: 100)  
+                           /test.parquet)  
+  -p,--parallelism <arg>   <int> number of partitions (default: 1)
+  -r,--rows <arg>          <int> number of rows per partition (default: 10)  
   -s,--size <arg>          <int> any variable payload size, string or
                             payload in IntPayload (default: 100)  
   -h,--help                show help
@@ -39,9 +39,9 @@ An example run would be :
 ```bash 
 ./bin/spark-submit --master yarn \
 --class com.ibm.crail.spark.tools.Parqgen parqgen-1.0.jar \
--c IntWithPayload -C snappy -o /myfile.parquet -r 84 -s 42 
+-c IntWithPayload -C snappy -o /myfile.parquet -r 84 -s 42 -p 12
 ```
-This will create 84 rows for `case class IntWithPayload` as `[Int, Array[Byte]]` with 42 bytes byte array, and save this as a parquet file format in `/myfile.parquet`.
+This will create 984 (12 * 84) rows for `case class IntWithPayload` as `[Int, Array[Byte]]` with 42 bytes byte array, and save this as a parquet file format in `/myfile.parquet` in 12 different partitions. 
 
 ## Contributions
 
