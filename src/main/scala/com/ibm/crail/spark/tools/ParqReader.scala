@@ -26,14 +26,12 @@ import org.apache.spark.sql.SparkSession
 /**
   * Created by atr on 11.10.16.
   */
-object ParqRead {
+object ParqReader {
 
   def foo(x: Array[String]) = x.foldLeft("")((a, b) => a + b)
 
   def main(args: Array[String]) {
-    val options = new ParseOptions()
-    println(options.getBanner)
-    println("concat arguments = " + foo(args))
+    println("ParqReader : " + foo(args))
     if(args.length != 2) {
       System.err.println(" Tell me which file to read? ")
       System.exit(-1)
@@ -41,15 +39,16 @@ object ParqRead {
 
     val spark = SparkSession
       .builder()
-      .appName("Spark SQL basic example")
-      .config("spark.default.parallelism", options.getParalleism.toString)
+      .appName("ParqReader: Spark SQL parquet, read, and count example")
       .getOrCreate()
 
-    val inputDS = spark.read.parquet(args(1))
+    val inputDS = spark.read.parquet(args(0))
     val items = inputDS.count()
-    System.out.println("----------------------------------------------------------------")
-    System.out.println(" Total number of rows are : " + items)
+    val partitions = SparkTools.countNumPartitions(spark, inputDS)
     inputDS.show()
+    println("----------------------------------------------------------------")
+    println("RESULTS: file " + args(0) + " contains " + items + " rows in " + partitions + " partitions")
+    println("----------------------------------------------------------------")
     spark.stop()
   }
 }
