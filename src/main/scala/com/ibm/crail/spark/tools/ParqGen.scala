@@ -82,7 +82,9 @@ object ParqGen {
     val inputDS = spark.read.parquet(options.getOutput)
     val items = inputDS.count()
     val partitions = SparkTools.countNumPartitions(spark, inputDS)
-    inputDS.show()
+    if(options.getShowRows > 0) {
+      inputDS.show(options.getShowRows)
+    }
     println("----------------------------------------------------------------")
     println("RESULTS: file " + options.getOutput+ " contains " + items + " rows in " + partitions + " partitions")
     println("----------------------------------------------------------------")

@@ -39,6 +39,7 @@ public class ParseOptions implements Serializable {
     private String compressionType;
     private int variableSize;
     private String banner;
+    private int showRows;
 
     public ParseOptions(){
         this.rows = 10;
@@ -48,6 +49,7 @@ public class ParseOptions implements Serializable {
         this.paralleism = 1;
         this.compressionType = "uncompressed";
         this.variableSize = 100;
+        this.showRows = 0;
 
         options = new Options();
         options.addOption("h", "help", false, "show help");
@@ -59,6 +61,7 @@ public class ParseOptions implements Serializable {
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
         options.addOption("p", "parallelism", true, "<int> number of partitions (default: " + this.paralleism+")");
         options.addOption("s", "size", true, "<int> any variable payload size, string or payload in IntPayload (default: " + this.variableSize+")");
+        options.addOption("S", "show", true, "<int> show <int> number of rows (default: " + this.showRows+", zero means do not show)");
         options.addOption("C", "compress", true, "<String> compression type, valid values are: uncompressed, snappy, gzip, lzo (default: "
                 + this.compressionType+")");
 
@@ -118,6 +121,10 @@ public class ParseOptions implements Serializable {
         return  this.banner;
     }
 
+    public int getShowRows(){
+        return this.showRows;
+    }
+
     private int getMatchingIndex(String[] options, String name) {
         int i;
         for(i = 0; i < options.length; i++)
@@ -167,6 +174,10 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("s")) {
                 this.variableSize = Integer.parseInt(cmd.getOptionValue("s").trim());
+            }
+
+            if (cmd.hasOption("S")) {
+                this.showRows = Integer.parseInt(cmd.getOptionValue("S").trim());
             }
 
             if (cmd.hasOption("p")) {
