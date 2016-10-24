@@ -42,8 +42,8 @@ public class ParseOptions {
         this.rows = 10;
         this.output = "/ParqGenOutput.parquet";
         this.classFileName = null;
-        this.className ="com.ibm.crail.spark.toolsX.schema.ParquetExample";
-        this.paralleism = 1;
+        this.className ="ParquetExample";
+        this.paralleism = 8;
         this.compressionType = "uncompressed";
         this.variableSize = 100;
 
@@ -55,7 +55,7 @@ public class ParseOptions {
                 "                             These classes are in ./schema/ in src.");
         options.addOption("f", "caseFile", true, "<String> case class file to compile and load (NYI)");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
-        options.addOption("p", "parallelism", true, "<int> default parallelism (NYI)");
+        options.addOption("p", "parallelism", true, "<int> default parallelism/partitions");
         options.addOption("s", "size", true, "<int> any variable payload size, string or payload in IntPayload (default: " + this.variableSize+")");
         options.addOption("C", "compress", true, "<String> compression type, valid values are: uncompressed, snappy, gzip, lzo (default: "
                 + this.compressionType+")");
@@ -165,6 +165,10 @@ public class ParseOptions {
 
             if (cmd.hasOption("s")) {
                 this.variableSize = Integer.parseInt(cmd.getOptionValue("s").trim());
+            }
+
+            if (cmd.hasOption("p")) {
+                this.paralleism = Integer.parseInt(cmd.getOptionValue("p").trim());
             }
 
         } catch (ParseException e) {
