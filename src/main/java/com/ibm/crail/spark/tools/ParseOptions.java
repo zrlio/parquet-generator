@@ -43,7 +43,7 @@ public class ParseOptions {
         this.output = "/ParqGenOutput.parquet";
         this.classFileName = null;
         this.className ="ParquetExample";
-        this.paralleism = 8;
+        this.paralleism = 1;
         this.compressionType = "uncompressed";
         this.variableSize = 100;
 
