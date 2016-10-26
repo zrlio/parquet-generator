@@ -24,4 +24,4 @@ package com.ibm.crail.spark.tools.schema
 /**
   * Created by atr on 05.10.16.
   */
-case class ParquetExample(randString:String, randInt:Int, randLong: Long, randDouble: Double, cast: String, randFloat: Float)
+case class ParquetExample(randInt:Int, randLong: Long, randDouble: Double, randFloat: Float, randString: String)
