@@ -31,11 +31,12 @@ import java.io.Serializable;
  */
 public class ParseOptions implements Serializable {
     private Options options;
-    private int rows;
+    private long rowCount;
     private String output;
     private String classFileName;
     private String className;
-    private int paralleism;
+    private int tasks;
+    private int partitions;
     private String compressionType;
     private int variableSize;
     private String banner;
@@ -43,11 +44,12 @@ public class ParseOptions implements Serializable {
     private int rangeInt;
 
     public ParseOptions(){
-        this.rows = 10;
+        this.rowCount = 10;
         this.output = "/ParqGenOutput.parquet";
         this.classFileName = null;
         this.className ="ParquetExample";
-        this.paralleism = 1;
+        this.tasks = 1;
+        this.partitions = 1;
         this.compressionType = "uncompressed";
         this.variableSize = 100;
         this.showRows = 0;
@@ -55,13 +57,14 @@ public class ParseOptions implements Serializable {
 
         options = new Options();
         options.addOption("h", "help", false, "show help");
-        options.addOption("r", "rows", true, "<int> number of rows per partition (default: " + this.rows+")");
+        options.addOption("r", "rows", true, "<long> total number of rows (default: " + this.rowCount +")");
         options.addOption("c", "case", true, "case class schema currently supported are: \n" +
                 "                             ParquetExample (default), IntWithPayload. \n" +
                 "                             These classes are in ./schema/ in src.");
         options.addOption("f", "caseFile", true, "<String> case class file to compile and load (NYI)");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
-        options.addOption("p", "parallelism", true, "<int> number of partitions (default: " + this.paralleism+")");
+        options.addOption("t", "tasks", true, "<int> number of tasks to generate this data (default: " + this.tasks+")");
+        options.addOption("p", "partitions", true, "<int> number of output partitions (default: " + this.partitions+")");
         options.addOption("s", "size", true, "<int> any variable payload size, string or payload in IntPayload (default: "
                 + this.variableSize+")");
         options.addOption("R", "rangeInt", true, "<int> maximum int value, value for any Int column will be generated " +
@@ -108,12 +111,16 @@ public class ParseOptions implements Serializable {
         return this.className;
     }
 
-    public int getRows(){
-        return this.rows;
+    public long getRowCount(){
+        return this.rowCount;
     }
 
-    public int getParalleism(){
-        return this.paralleism;
+    public int getPartitions(){
+        return this.partitions;
+    }
+
+    public int getTasks(){
+        return this.tasks;
     }
 
     public String getCompressionType(){
@@ -154,7 +161,7 @@ public class ParseOptions implements Serializable {
             }
 
             if (cmd.hasOption("r")) {
-                this.rows = Integer.parseInt(cmd.getOptionValue("r").trim());
+                this.rowCount = Long.parseLong(cmd.getOptionValue("r").trim());
             }
 
             if (cmd.hasOption("o")) {
@@ -183,7 +190,11 @@ public class ParseOptions implements Serializable {
             }
 
             if (cmd.hasOption("p")) {
-                this.paralleism = Integer.parseInt(cmd.getOptionValue("p").trim());
+                this.partitions = Integer.parseInt(cmd.getOptionValue("p").trim());
+            }
+
+            if (cmd.hasOption("t")) {
+                this.tasks = Integer.parseInt(cmd.getOptionValue("t").trim());
             }
 
             if (cmd.hasOption("R")) {

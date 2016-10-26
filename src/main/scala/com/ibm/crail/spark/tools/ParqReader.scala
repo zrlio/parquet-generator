@@ -32,7 +32,7 @@ object ParqReader {
 
   def main(args: Array[String]) {
     println("ParqReader : " + foo(args))
-    if(args.length != 2) {
+    if(args.length != 1) {
       System.err.println(" Tell me which file to read? ")
       System.exit(-1)
     }
@@ -47,7 +47,7 @@ object ParqReader {
     val partitions = SparkTools.countNumPartitions(spark, inputDS)
     inputDS.show()
     println("----------------------------------------------------------------")
-    println("RESULTS: file " + args(0) + " contains " + items + " rows in " + partitions + " partitions")
+    println("RESULTS: file " + args(0) + " contains " + items + " rows and makes " + partitions + " partitions when read.")
     println("----------------------------------------------------------------")
     spark.stop()
   }
