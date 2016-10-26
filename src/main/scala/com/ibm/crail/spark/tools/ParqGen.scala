@@ -52,7 +52,7 @@ object ParqGen {
         val base = new ListBuffer[ParquetExample]()
         /* now we want to generate a loop and save the parquet file */
         for (a <- 0 until options.getRows) {
-          base += ParquetExample(DataGenerator.getNextInt,
+          base += ParquetExample(DataGenerator.getNextInt(options.getrRangeInt),
             DataGenerator.getNextLong,
             DataGenerator.getNextDouble,
             DataGenerator.getNextFloat,
@@ -66,7 +66,7 @@ object ParqGen {
         val base = new ListBuffer[IntWithPayload]()
         /* now we want to generate a loop and save the parquet file */
         for (a <- 0 until options.getRows) {
-          base += IntWithPayload(DataGenerator.getNextInt,
+          base += IntWithPayload(DataGenerator.getNextInt(options.getrRangeInt),
             DataGenerator.getNextByteArray(options.getVariableSize))
         }
         base

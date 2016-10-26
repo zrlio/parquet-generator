@@ -40,6 +40,7 @@ public class ParseOptions implements Serializable {
     private int variableSize;
     private String banner;
     private int showRows;
+    private int rangeInt;
 
     public ParseOptions(){
         this.rows = 10;
@@ -50,6 +51,7 @@ public class ParseOptions implements Serializable {
         this.compressionType = "uncompressed";
         this.variableSize = 100;
         this.showRows = 0;
+        this.rangeInt = Integer.MAX_VALUE;
 
         options = new Options();
         options.addOption("h", "help", false, "show help");
@@ -60,9 +62,14 @@ public class ParseOptions implements Serializable {
         options.addOption("f", "caseFile", true, "<String> case class file to compile and load (NYI)");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
         options.addOption("p", "parallelism", true, "<int> number of partitions (default: " + this.paralleism+")");
-        options.addOption("s", "size", true, "<int> any variable payload size, string or payload in IntPayload (default: " + this.variableSize+")");
-        options.addOption("S", "show", true, "<int> show <int> number of rows (default: " + this.showRows+", zero means do not show)");
-        options.addOption("C", "compress", true, "<String> compression type, valid values are: uncompressed, snappy, gzip, lzo (default: "
+        options.addOption("s", "size", true, "<int> any variable payload size, string or payload in IntPayload (default: "
+                + this.variableSize+")");
+        options.addOption("R", "rangeInt", true, "<int> maximum int value, value for any Int column will be generated " +
+                "between [0,rangeInt), (default: " + this.rangeInt+")");
+        options.addOption("S", "show", true, "<int> show <int> number of rows (default: " + this.showRows +
+                ", zero means do not show)");
+        options.addOption("C", "compress", true, "<String> compression type, valid values are: uncompressed, " +
+                "snappy, gzip, lzo (default: "
                 + this.compressionType+")");
 
         String banner2 = "(_____ \\                / _____)            \n" +
@@ -125,13 +132,8 @@ public class ParseOptions implements Serializable {
         return this.showRows;
     }
 
-    private int getMatchingIndex(String[] options, String name) {
-        int i;
-        for(i = 0; i < options.length; i++)
-            if (name.equalsIgnoreCase(options[i])){
-                return i;
-            }
-        throw  new IllegalArgumentException(name + " not found in " + options);
+    public int getrRangeInt() {
+        return this.rangeInt;
     }
 
     public void show_help() {
@@ -182,6 +184,10 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("p")) {
                 this.paralleism = Integer.parseInt(cmd.getOptionValue("p").trim());
+            }
+
+            if (cmd.hasOption("R")) {
+                this.rangeInt = Integer.parseInt(cmd.getOptionValue("R").trim());
             }
 
         } catch (ParseException e) {

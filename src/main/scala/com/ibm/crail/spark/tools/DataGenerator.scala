@@ -35,6 +35,9 @@ object DataGenerator extends Serializable {
   def getNextInt:Int = {
     random.nextInt()
   }
+  def getNextInt(max:Int):Int = {
+    random.nextInt(max)
+  }
   def getNextLong:Long= {
     random.nextLong()
   }
