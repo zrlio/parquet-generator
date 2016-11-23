@@ -20,14 +20,18 @@
  */
 
 package com.ibm.crail.spark.tools
+import scala.reflect.runtime.universe._
 
 /**
   * Created by atr on 07.10.16.
   */
 object StandaloneTest {
   def main(args: Array[String]): Unit = {
-    val clazz = ClassCompilerLoader.compileAndLoadClass("DynamicExample.scala")
+    val clazz = ClassCompilerLoader.compileAndLoadClass("DynamicExample.scala").asInstanceOf[Class[Product]]
     val obj = ObjectGenerator.makeNewObject(clazz)
+    val x = ObjectGenerator.getSparkSchema(clazz)
+    //val z = ObjectGenerator.caseClassParamsOf[obj.type]()
+    System.out.println("class name is : " + obj.getClass.getCanonicalName)
     System.out.println(obj.toString)
   }
 }

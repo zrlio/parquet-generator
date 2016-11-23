@@ -21,6 +21,9 @@
 
 package com.ibm.crail.spark.tools
 
+import org.apache.spark.sql.types.StructType
+import scala.collection.immutable.ListMap
+import scala.reflect.runtime.universe._
 import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 import scala.reflect.runtime.{ universe => ru }
@@ -54,7 +57,35 @@ object ObjectGenerator {
     }
   }
 
-  def makeNewObject(clazz: Class[_]): Product = {
+  def getSparkSchema(clazz: Class[Product]): StructType = {
+    val consts = clazz.getDeclaredConstructors
+    if(consts.length != 1){
+      throw new Exception("There are " + consts.length + " constructors. Please make a case class")
+    }
+    val pType = consts(0).getParameterTypes
+    for (i <- 0 until pType.length) {
+      System.out.println(" var: " + pType(i).getName + " type: " + pType(i).getTypeName)
+    }
+    null
+  }
+
+  def caseClassParamsOf[T: TypeTag]: ListMap[String, Type] = {
+    val tpe = typeOf[T]
+    val constructorSymbol = tpe.decl(termNames.CONSTRUCTOR)
+    val defaultConstructor =
+      if (constructorSymbol.isMethod) constructorSymbol.asMethod
+      else {
+        val ctors = constructorSymbol.asTerm.alternatives
+        ctors.map { _.asMethod }.find { _.isPrimaryConstructor }.get
+      }
+
+    ListMap[String, Type]() ++ defaultConstructor.paramLists.reduceLeft(_ ++ _).map {
+      sym => sym.name.toString -> tpe.member(sym.name).asMethod.returnType
+    }
+  }
+
+
+  def makeNewObject(clazz: Class[Product]): Product = {
     val consts = clazz.getDeclaredConstructors
     if(consts.length != 1){
       throw new Exception("There are " + consts.length + " constructors. Please make a case class")
