@@ -86,16 +86,17 @@ object ParqGen {
     println("----------------------------------------------------------------")
 
     /* now we read it back and check */
-    val inputDS = spark.read.parquet(options.getOutput)
-    val items = inputDS.count()
-    val partitions = SparkTools.countNumPartitions(spark, inputDS)
+    val inputDF = spark.read.parquet(options.getOutput)
+    val items = inputDF.count()
+    val partitions = SparkTools.countNumPartitions(spark, inputDF)
     if(options.getShowRows > 0) {
-      inputDS.show(options.getShowRows)
+      inputDF.show(options.getShowRows)
     }
     println("----------------------------------------------------------------")
     println("RESULTS: file " + options.getOutput+ " contains " + items + " rows and makes " + partitions + " partitions when read")
     println("----------------------------------------------------------------")
-    require(items == options.getRowCount)
+    require(items == options.getRowCount,
+      "Number of rows do not match, counted: " + items + " expected: " + options.getRowCount)
     spark.stop()
   }
 }
