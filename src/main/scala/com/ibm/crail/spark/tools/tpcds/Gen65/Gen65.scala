@@ -78,7 +78,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val storeDS = storeRDD.toDS().repartition(options.getPartitions)
-  storeDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store")
+  storeDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store.parquet")
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("date_dim") / options.getTasks
@@ -92,7 +92,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
         d_month_seq= nextInt(),
         d_week_seq= nextInt(),
         d_quarter_seq= nextInt(),
-        d_year= nextInt(),
+        d_year= nextRandYear(),
         d_dow= nextInt(),
         d_moy= nextInt(),
         d_dom= nextInt(),
@@ -118,7 +118,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val date_dimDS = date_dimRDD.toDS().repartition(options.getPartitions)
-  date_dimDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/date_dim")
+  date_dimDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/date_dim.parquet")
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("item") / options.getTasks
@@ -152,7 +152,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val itemDS = itemRDD.toDS().repartition(options.getPartitions)
-  itemDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/item")
+  itemDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/item.parquet")
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("store_sales") / options.getTasks
@@ -187,5 +187,5 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val store_salesDS = store_salesRDD.toDS().repartition(options.getPartitions)
-  store_salesDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store_sales")
+  store_salesDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store_sales.parquet")
 }
