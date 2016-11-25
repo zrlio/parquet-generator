@@ -170,10 +170,20 @@ public class ParseOptions implements Serializable {
         return q65Map;
     }
 
+    private void showErrorAndExit(String str){
+        System.err.println("*********************************************");
+        System.err.println("ERROR: " + str);
+        System.err.println("*********************************************");
+        show_help();
+        System.exit(-1);
+    }
+
     public void parse(String[] args) {
         CommandLineParser parser = new GnuParser();
         CommandLine cmd = null;
         boolean cset = false;
+        boolean q65set = false;
+        boolean setr = false;
         try {
             cmd = parser.parse(options, args);
 
@@ -184,6 +194,7 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("r")) {
                 this.rowCount = Long.parseLong(cmd.getOptionValue("r").trim());
+                setr = true;
             }
 
             if (cmd.hasOption("o")) {
@@ -197,6 +208,8 @@ public class ParseOptions implements Serializable {
             if (cmd.hasOption("c")) {
                 this.className = cmd.getOptionValue("c").trim();
                 cset = true;
+                if(this.className.compareToIgnoreCase("tpcds") == 0)
+                    q65set = true;
             }
 
             if (cmd.hasOption("C")) {
@@ -248,28 +261,24 @@ public class ParseOptions implements Serializable {
                     q65Map.put("store", Long.parseLong(split[0].trim()));
 
                 } else {
-                    System.err.println("Failed to parse command line properties for -Q " + cmd.getOptionValue("Q"));
-                    show_help();
-                    System.exit(-1);
+                    showErrorAndExit("Failed to parse command line properties for -Q " + cmd.getOptionValue("Q"));
                 }
             }
 
         } catch (ParseException e) {
-            System.err.println("Failed to parse command line properties" + e);
-            show_help();
-            System.exit(-1);
+            showErrorAndExit("Failed to parse command line properties" + e);
         }
         /* do some sanity checks */
         if(this.classFileName != null && (this.className != null && cset) ){
-            System.err.println("You cannot define both -f and -c. Please use one");
-            show_help();
-            System.exit(-1);
+            showErrorAndExit("You cannot define both -f and -c. Please use one");
         }
         /* this will never happen as this.className is defined to a default class */
         if(this.classFileName == null && this.className == null){
-            System.err.println("You have to define atleast one class, use either -f XOR -c.");
-            show_help();
-            System.exit(-1);
+            showErrorAndExit("You have to define atleast one class, use either -f XOR -c.");
+        }
+        /* now say about tpcds */
+        if(q65set && setr){
+            showErrorAndExit("You are generating TPC-DS data, use -Q instead of -r for #rows.");
         }
     }
 }
