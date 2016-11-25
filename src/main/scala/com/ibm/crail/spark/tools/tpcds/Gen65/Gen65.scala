@@ -41,6 +41,9 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
 
   /* this is where we generate store */
   var rowsPerTask = options.getQ65Map.get("store") / options.getTasks
+  if(rowsPerTask == 0)
+    rowsPerTask = 1
+
   val storeRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
     val base = new ListBuffer[TPCDS.store]()
     /* now we want to generate a loop and save the parquet file */
@@ -82,6 +85,9 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("date_dim") / options.getTasks
+  if(rowsPerTask == 0)
+    rowsPerTask = 1
+
   val date_dimRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
     val base = new ListBuffer[TPCDS.date_dim]()
     /* now we want to generate a loop and save the parquet file */
@@ -122,6 +128,8 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("item") / options.getTasks
+  if(rowsPerTask == 0)
+    rowsPerTask = 1
   val itemRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
     val base = new ListBuffer[TPCDS.item]()
     /* now we want to generate a loop and save the parquet file */
@@ -156,6 +164,8 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("store_sales") / options.getTasks
+  if(rowsPerTask == 0)
+    rowsPerTask = 1
   val store_salesRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
     val base = new ListBuffer[TPCDS.store_sales]()
     /* now we want to generate a loop and save the parquet file */
