@@ -32,7 +32,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
 
   def nextInt() : Int = {
     /* we generate ints between [0, and -R) */
-    DataGenerator.getNextInt(options.getrRangeInt())
+    DataGenerator.getNextInt(options.getRangeInt())
   }
 
   def nextFloat() : Float = {

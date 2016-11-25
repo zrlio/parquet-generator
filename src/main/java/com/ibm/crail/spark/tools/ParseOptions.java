@@ -43,6 +43,7 @@ public class ParseOptions implements Serializable {
     private int showRows;
     private int rangeInt;
     private HashMap<String, Long> q65Map;
+    private int scaleFactor;
 
 
     public ParseOptions(){
@@ -69,6 +70,7 @@ public class ParseOptions implements Serializable {
         q65Map.put("date_dim", 73049L);
         q65Map.put("item", 18000L);
         q65Map.put("store_sales", 2880404L);
+        this.scaleFactor = 1;
 
         options = new Options();
         options.addOption("h", "help", false, "show help");
@@ -91,6 +93,7 @@ public class ParseOptions implements Serializable {
                 + this.compressionType+")");
 
         options.addOption("q", "q65rows", true, "<Long,Long,Long,Long> 4 or less longs, as #rows for store, date_dim, item, store_sales");
+        options.addOption("F", "factor", true, "<Int> Scaling factor wrt to 1GB config. You can also explicitly specify number of rows using -q");
 
 
         String banner2 = "(_____ \\                / _____)            \n" +
@@ -157,7 +160,7 @@ public class ParseOptions implements Serializable {
         return this.showRows;
     }
 
-    public int getrRangeInt() {
+    public int getRangeInt() {
         return this.rangeInt;
     }
 
@@ -168,6 +171,10 @@ public class ParseOptions implements Serializable {
 
     public HashMap<String, Long>getQ65Map() {
         return q65Map;
+    }
+
+    public int getScaleFactor(){
+        return scaleFactor;
     }
 
     private void showErrorAndExit(String str){
@@ -234,6 +241,15 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("R")) {
                 this.rangeInt = Integer.parseInt(cmd.getOptionValue("R").trim());
+            }
+
+            if (cmd.hasOption("F")) {
+                this.scaleFactor= Integer.parseInt(cmd.getOptionValue("F").trim());
+                /* if you get a scale factor when update */
+                q65Map.put("store", q65Map.get("store") * this.scaleFactor);
+                q65Map.put("date_dim", q65Map.get("date_dim") * this.scaleFactor);
+                q65Map.put("item", q65Map.get("item")  * this.scaleFactor);
+                q65Map.put("store_sales", q65Map.get("store_sales")  * this.scaleFactor);
             }
 
             if (cmd.hasOption("Q")) {
