@@ -22,6 +22,7 @@
 package com.ibm.crail.spark.tools
 
 import com.ibm.crail.spark.tools.schema.{IntWithPayload, ParquetExample}
+import com.ibm.crail.spark.tools.tpcds.Gen65.Gen65
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
 import scala.collection.mutable.ListBuffer
@@ -29,6 +30,24 @@ import scala.collection.mutable.ListBuffer
 object ParqGen {
 
   def foo(x: Array[String]) = x.foldLeft("")((a, b) => a + b)
+
+
+  def readAndReturnRows(spark: SparkSession, fileName: String, showRows: Int, expectedRows: Long): Unit = {
+    /* now we read it back and check */
+    val inputDF = spark.read.parquet(fileName)
+    val items = inputDF.count()
+    val partitions = SparkTools.countNumPartitions(spark, inputDF)
+    if(showRows > 0) {
+      inputDF.show(showRows)
+    }
+    println("----------------------------------------------------------------")
+    println("RESULTS: file " + fileName + " contains " + items + " rows and makes " + partitions + " partitions when read")
+    println("----------------------------------------------------------------")
+    if(expectedRows > 0 ) {
+      require(items == expectedRows,
+        "Number of rows do not match, counted: " + items + " expected: " + expectedRows)
+    }
+  }
 
   def main(args: Array[String]) {
     val options = new ParseOptions()
@@ -66,6 +85,7 @@ object ParqGen {
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
       outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
+      readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("IntWithPayload")){
       val inputRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
         val base = new ListBuffer[IntWithPayload]()
@@ -78,25 +98,16 @@ object ParqGen {
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
       outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
-    }else {
+      readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
+    } else if (options.getClassName.equalsIgnoreCase("tpcds")){
+      val gx = new Gen65(spark, options)
+      /* no reading back here */
+    } else {
       throw new Exception("Illegal class name: " + options.getClassName)
     }
     println("----------------------------------------------------------------")
-    println("ParqGen: Data written out successfully to " + options.getOutput + ", now counting ....")
+    println("ParqGen: Data written out successfully to " + options.getOutput )
     println("----------------------------------------------------------------")
-
-    /* now we read it back and check */
-    val inputDF = spark.read.parquet(options.getOutput)
-    val items = inputDF.count()
-    val partitions = SparkTools.countNumPartitions(spark, inputDF)
-    if(options.getShowRows > 0) {
-      inputDF.show(options.getShowRows)
-    }
-    println("----------------------------------------------------------------")
-    println("RESULTS: file " + options.getOutput+ " contains " + items + " rows and makes " + partitions + " partitions when read")
-    println("----------------------------------------------------------------")
-    require(items == options.getRowCount,
-      "Number of rows do not match, counted: " + items + " expected: " + options.getRowCount)
     spark.stop()
   }
 }

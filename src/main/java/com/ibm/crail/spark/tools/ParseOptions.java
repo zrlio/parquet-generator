@@ -24,7 +24,7 @@ package com.ibm.crail.spark.tools;
 import org.apache.commons.cli.*;
 
 import java.io.Serializable;
-
+import java.util.HashMap;
 
 /**
  * Created by atr on 9/30/16.
@@ -42,6 +42,8 @@ public class ParseOptions implements Serializable {
     private String banner;
     private int showRows;
     private int rangeInt;
+    private HashMap<String, Long> q65Map;
+
 
     public ParseOptions(){
         this.rowCount = 10;
@@ -54,12 +56,25 @@ public class ParseOptions implements Serializable {
         this.variableSize = 100;
         this.showRows = 0;
         this.rangeInt = Integer.MAX_VALUE;
+        this.q65Map = new HashMap<>(4);
+
+        /* these are the numbers for a 1TB run */
+        //q65Map.put("store", 1002L);
+        //q65Map.put("date_dim", 73049L);
+        //q65Map.put("item", 300000L);
+        //q65Map.put("store_sales", 2879987999L);
+
+        /* these are the numbers for a 1GB run */
+        q65Map.put("store", 12L);
+        q65Map.put("date_dim", 73049L);
+        q65Map.put("item", 18000L);
+        q65Map.put("store_sales", 2880404L);
 
         options = new Options();
         options.addOption("h", "help", false, "show help");
         options.addOption("r", "rows", true, "<long> total number of rows (default: " + this.rowCount +")");
         options.addOption("c", "case", true, "case class schema currently supported are: \n" +
-                "                             ParquetExample (default), IntWithPayload. \n" +
+                "                             ParquetExample (default), IntWithPayload, and tpcds (WiP). \n" +
                 "                             These classes are in ./schema/ in src.");
         options.addOption("f", "caseFile", true, "<String> case class file to compile and load (NYI)");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
@@ -74,6 +89,9 @@ public class ParseOptions implements Serializable {
         options.addOption("C", "compress", true, "<String> compression type, valid values are: uncompressed, " +
                 "snappy, gzip, lzo (default: "
                 + this.compressionType+")");
+
+        options.addOption("q", "q65rows", true, "<Long,Long,Long,Long> 4 or less longs, as #rows for store, date_dim, item, store_sales");
+
 
         String banner2 = "(_____ \\                / _____)            \n" +
                 " _____) )___  ____ ____| /  ___  ____ ____  \n" +
@@ -148,6 +166,10 @@ public class ParseOptions implements Serializable {
         formatter.printHelp("Parqgen", options);
     }
 
+    public HashMap<String, Long>getQ65Map() {
+        return q65Map;
+    }
+
     public void parse(String[] args) {
         CommandLineParser parser = new GnuParser();
         CommandLine cmd = null;
@@ -199,6 +221,37 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("R")) {
                 this.rangeInt = Integer.parseInt(cmd.getOptionValue("R").trim());
+            }
+
+            if (cmd.hasOption("Q")) {
+                /* now we can have 4 or less longs */
+                String[] split = cmd.getOptionValue("Q").split(",");
+                if(split.length == 4){
+                    q65Map.put("store", Long.parseLong(split[0].trim()));
+                    q65Map.put("date_dim", Long.parseLong(split[1].trim()));
+                    q65Map.put("item", Long.parseLong(split[2].trim()));
+                    q65Map.put("store_sales", Long.parseLong(split[3].trim()));
+
+                } else if(split.length == 3){
+
+                    q65Map.put("store", Long.parseLong(split[0].trim()));
+                    q65Map.put("date_dim", Long.parseLong(split[1].trim()));
+                    q65Map.put("item", Long.parseLong(split[2].trim()));
+
+                } else if(split.length == 2){
+
+                    q65Map.put("store", Long.parseLong(split[0].trim()));
+                    q65Map.put("date_dim", Long.parseLong(split[1].trim()));
+
+                } else if(split.length == 1){
+
+                    q65Map.put("store", Long.parseLong(split[0].trim()));
+
+                } else {
+                    System.err.println("Failed to parse command line properties for -Q " + cmd.getOptionValue("Q"));
+                    show_help();
+                    System.exit(-1);
+                }
             }
 
         } catch (ParseException e) {
