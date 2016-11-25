@@ -64,13 +64,12 @@ object ParqGen {
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
 
-    /* some calculations */
-    require(options.getRowCount % options.getTasks == 0, " Please set rowCount (-r) and tasks (-t) such that " +
-      "rowCount%tasks == 0, currently, rows: " + options.getRowCount + " tasks " + options.getTasks)
-    val rowsPerTask = options.getRowCount / options.getTasks
-
     //FIXME: this is a stupid way of writing code, but I cannot template this with DS/scala
     if(options.getClassName.equalsIgnoreCase("ParquetExample")){
+      /* some calculations */
+      require(options.getRowCount % options.getTasks == 0, " Please set rowCount (-r) and tasks (-t) such that " +
+        "rowCount%tasks == 0, currently, rows: " + options.getRowCount + " tasks " + options.getTasks)
+      val rowsPerTask = options.getRowCount / options.getTasks
       val inputRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
         val base = new ListBuffer[ParquetExample]()
         /* now we want to generate a loop and save the parquet file */
@@ -84,9 +83,13 @@ object ParqGen {
         base
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
-      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
+      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+".parquet")
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("IntWithPayload")){
+      /* some calculations */
+      require(options.getRowCount % options.getTasks == 0, " Please set rowCount (-r) and tasks (-t) such that " +
+        "rowCount%tasks == 0, currently, rows: " + options.getRowCount + " tasks " + options.getTasks)
+      val rowsPerTask = options.getRowCount / options.getTasks
       val inputRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
         val base = new ListBuffer[IntWithPayload]()
         /* now we want to generate a loop and save the parquet file */
@@ -97,7 +100,7 @@ object ParqGen {
         base
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
-      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
+      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+".parquet")
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("tpcds")){
       val gx = new Gen65(spark, options)
