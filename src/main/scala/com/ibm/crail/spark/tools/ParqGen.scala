@@ -83,7 +83,7 @@ object ParqGen {
         base
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
-      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+".parquet")
+      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("IntWithPayload")){
       /* some calculations */
@@ -100,7 +100,7 @@ object ParqGen {
         base
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
-      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+".parquet")
+      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("tpcds")){
       val gx = new Gen65(spark, options)
