@@ -1,4 +1,4 @@
-# parqgen
+# Parquet-Generator 
 Parquet file generator for humans
 
 ## How to build
@@ -6,7 +6,7 @@ Parquet file generator for humans
 mvn -DskipTests -T 1C install
 ```
 
-This should give you `parqgen-1.0.jar` in your `target` folder.
+This should give you `parquet-generator-1.0.jar` in your `target` folder.
 To build for with-dependencies, you can use: 
 ```bash
 mvn -DskipTests -T 1C clean compile assembly:single
@@ -14,12 +14,17 @@ mvn -DskipTests -T 1C clean compile assembly:single
 
 ## How to run
 ```bash
-./bin/spark-submit --master yarn --class com.ibm.crail.spark.tools.Parqgen parqgen-1.0.jar [OPTIONS]
+./bin/spark-submit --master yarn --class com.ibm.crail.spark.tools.ParquetGenerator parquet-generator-1.0.jar [OPTIONS]
 ```
 
 Current options are: 
 ```bash
  usage: Pargen
+  -a, --affix              affix random payload. Means that in each 
+                            instance of worker, the variable payload 
+                            data will be generated once, and used multiple 
+                            times with slight modifications. This leads 
+                            to significantly faster runtimes. 
   -c,--case <arg>          <String> case class schema currently supported are: 
                              ParquetExample (default), IntWithPayload. 
                              These classes are in ./schema/ in src.
@@ -38,7 +43,7 @@ Current options are:
 An example run would be : 
 ```bash 
 ./bin/spark-submit --master yarn \
---class com.ibm.crail.spark.tools.Parqgen parqgen-1.0.jar \
+--class com.ibm.crail.spark.tools.ParquetGenerator parquet-generator-1.0.jar \
 -c IntWithPayload -C snappy -o /myfile.parquet -r 84 -s 42 -p 12
 ```
 This will create 984 (12 * 84) rows for `case class IntWithPayload` as `[Int, Array[Byte]]` with 42 bytes byte array, and save this as a parquet file format in `/myfile.parquet` in 12 different partitions. 
