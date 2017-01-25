@@ -44,6 +44,7 @@ public class ParseOptions implements Serializable {
     private int rangeInt;
     private HashMap<String, Long> q65Map;
     private int scaleFactor;
+    private boolean affixRandom;
 
 
     public ParseOptions(){
@@ -58,6 +59,7 @@ public class ParseOptions implements Serializable {
         this.showRows = 0;
         this.rangeInt = Integer.MAX_VALUE;
         this.q65Map = new HashMap<>(4);
+        this.affixRandom = false;
 
         /* these are the numbers for a 1TB run */
         //q65Map.put("store", 1002L);
@@ -74,6 +76,8 @@ public class ParseOptions implements Serializable {
 
         options = new Options();
         options.addOption("h", "help", false, "show help");
+        options.addOption("a", "affix", false, " affix random payload. Means that in each instance of worker, the "+
+                " variable payload data will be generated once, and used multiple times (default " + this.affixRandom +")");
         options.addOption("r", "rows", true, "<long> total number of rows (default: " + this.rowCount +")");
         options.addOption("c", "case", true, "case class schema currently supported are: \n" +
                 "                             ParquetExample (default), IntWithPayload, and tpcds (WiP). \n" +
@@ -177,6 +181,10 @@ public class ParseOptions implements Serializable {
         return scaleFactor;
     }
 
+    public boolean getAffixRandom(){
+        return this.affixRandom;
+    }
+
     private void showErrorAndExit(String str){
         System.err.println("*********************************************");
         System.err.println("ERROR: " + str);
@@ -197,6 +205,10 @@ public class ParseOptions implements Serializable {
             if (cmd.hasOption("h")) {
                 show_help();
                 System.exit(0);
+            }
+
+            if (cmd.hasOption("a")) {
+                this.affixRandom = true;
             }
 
             if (cmd.hasOption("r")) {

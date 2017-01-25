@@ -78,7 +78,8 @@ object ParqGen {
             DataGenerator.getNextLong,
             DataGenerator.getNextDouble,
             DataGenerator.getNextFloat,
-            DataGenerator.getNextString(options.getVariableSize))
+            DataGenerator.getNextString(options.getVariableSize,
+              options.getAffixRandom))
         }
         base
       }
@@ -93,9 +94,11 @@ object ParqGen {
       val inputRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks).flatMap { p =>
         val base = new ListBuffer[IntWithPayload]()
         /* now we want to generate a loop and save the parquet file */
+        val size = options.getVariableSize
         for (a <- 0L until rowsPerTask) {
           base += IntWithPayload(DataGenerator.getNextInt(options.getRangeInt),
-            DataGenerator.getNextByteArray(options.getVariableSize))
+            DataGenerator.getNextByteArray(size,
+              options.getAffixRandom))
         }
         base
       }

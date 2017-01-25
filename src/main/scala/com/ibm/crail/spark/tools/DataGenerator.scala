@@ -29,18 +29,60 @@ import scala.util.Random
 object DataGenerator extends Serializable {
   val random = new Random(System.nanoTime())
 
-  def getNextString(size: Int):String = {
-    random.alphanumeric.take(size).mkString
+  /* affix payload variables */
+  var affixStringBuilder:StringBuilder = null
+  var affixByteArray:Array[Byte] = null
+
+  def getNextString(size: Int, affix: Boolean):String = {
+    if(affix){
+      this.synchronized {
+        if (affixStringBuilder == null) {
+          affixStringBuilder = new StringBuilder(
+            random.alphanumeric.take(size).mkString)
+        }
+      }
+      /* just randomly change 1 byte - this is to make sure parquet
+      * does not ignore the data */
+      affixStringBuilder.setCharAt(random.nextInt(size),
+        random.nextPrintableChar())
+      affixStringBuilder.mkString
+    } else {
+      random.alphanumeric.take(size).mkString
+    }
   }
+
+  def getNextByteArray(size: Int, affix: Boolean):Array[Byte] = {
+    this.synchronized{
+      if(affixByteArray == null){
+        affixByteArray = new Array[Byte](size)
+        /* initialize */
+        random.nextBytes(affixByteArray)
+      }
+    }
+
+    if(!affix){
+      /* if not affix, then refresh random values */
+      random.nextBytes(affixByteArray)
+    } else {
+      /* just randomly change 1 byte - this is to make sure parquet
+      * does not ignore the data - char will be casted to byte */
+      affixByteArray(random.nextInt(size)) = random.nextPrintableChar().toByte
+    }
+    affixByteArray
+  }
+
   def getNextInt:Int = {
     random.nextInt()
   }
+
   def getNextInt(max:Int):Int = {
     random.nextInt(max)
   }
+
   def getNextLong:Long= {
     random.nextLong()
   }
+
   def getNextDouble:Double= {
     random.nextDouble()
   }
@@ -48,14 +90,9 @@ object DataGenerator extends Serializable {
   def getNextFloat: Float = {
     random.nextFloat()
   }
-  def getNextByteArray(size: Int):Array[Byte] = {
-    val arr = new Array[Byte](size)
-    random.nextBytes(arr)
-    arr
-  }
 
-  def getNextValue(s:String, size: Int): String ={
-    getNextString(size)
+  def getNextValue(s:String, size: Int, affix:Boolean): String ={
+    getNextString(size, affix)
   }
 
   def getNextValue(i:Int): Int = {
@@ -72,7 +109,7 @@ object DataGenerator extends Serializable {
 
   def getNextValueClass(cls: Any): Any = {
     val data = cls match {
-      case _:String => DataGenerator.getNextString(10)
+      case _:String => DataGenerator.getNextString(10, false)
       case _ => throw new Exception("Data type not supported: ")
     }
     data
