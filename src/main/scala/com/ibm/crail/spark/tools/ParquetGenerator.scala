@@ -27,7 +27,7 @@ import org.apache.spark.sql.{SaveMode, SparkSession}
 
 import scala.collection.mutable.ListBuffer
 
-object ParqGen {
+object ParquetGenerator {
 
   def foo(x: Array[String]) = x.foldLeft("")((a, b) => a + b)
 

@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.ibm.crail.spark.tools</groupId>
-  <artifactId>parqgen</artifactId>
+  <artifactId>parquet-generator</artifactId>
   <version>1.0</version>
   <name>${project.artifactId}</name>
   <description>Parquet file generator for humans</description>
@@ -124,7 +124,7 @@
             <manifest>
               <addClasspath>true</addClasspath>
               <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>com.ibm.crail.spark.tools.ParqGen</mainClass>
+              <mainClass>com.ibm.crail.spark.tools.ParquetGenerator</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -134,7 +134,7 @@
             <configuration>
                 <archive>
                     <manifest>
-                        <mainClass>com.ibm.crail.spark.tools.ParqGen</mainClass>
+                        <mainClass>com.ibm.crail.spark.tools.ParquetGenerator</mainClass>
                     </manifest>
                 </archive>
                 <descriptorRefs>
