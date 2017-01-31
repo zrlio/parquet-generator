@@ -102,7 +102,8 @@ public class ParseOptions implements Serializable {
 
         options.addOption("q", "q65rows", true, "<Long,Long,Long,Long> 4 or less longs, as #rows for store, date_dim, item, store_sales");
         options.addOption("F", "factor", true, "<Int> Scaling factor wrt to 1GB config. You can also explicitly specify number of rows using -q");
-        options.addOption("O", "options", true, "<str,str> key,value strings that will be passed to the data source of spark in writing.");
+        options.addOption("O", "options", true, "<str,str> key,value strings that will be passed to the data source of spark in writing." +
+        " E.g., for parquet you may want to re-consider parquet.block.size. The default is 128MB (the HDFS block size). ");
 
 
         String banner2 = "(_____ \\                / _____)            \n" +
