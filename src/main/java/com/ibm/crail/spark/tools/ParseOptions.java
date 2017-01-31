@@ -25,6 +25,8 @@ import org.apache.commons.cli.*;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 
 /**
  * Created by atr on 9/30/16.
@@ -45,7 +47,7 @@ public class ParseOptions implements Serializable {
     private HashMap<String, Long> q65Map;
     private int scaleFactor;
     private boolean affixRandom;
-
+    private Map<String,String> dataSourceParams;
 
     public ParseOptions(){
         this.rowCount = 10;
@@ -60,6 +62,8 @@ public class ParseOptions implements Serializable {
         this.rangeInt = Integer.MAX_VALUE;
         this.q65Map = new HashMap<>(4);
         this.affixRandom = false;
+        this.dataSourceParams = new Hashtable<>();
+
 
         /* these are the numbers for a 1TB run */
         //q65Map.put("store", 1002L);
@@ -98,6 +102,7 @@ public class ParseOptions implements Serializable {
 
         options.addOption("q", "q65rows", true, "<Long,Long,Long,Long> 4 or less longs, as #rows for store, date_dim, item, store_sales");
         options.addOption("F", "factor", true, "<Int> Scaling factor wrt to 1GB config. You can also explicitly specify number of rows using -q");
+        options.addOption("O", "options", true, "<str,str> key,value strings that will be passed to the data source of spark in writing.");
 
 
         String banner2 = "(_____ \\                / _____)            \n" +
@@ -183,6 +188,10 @@ public class ParseOptions implements Serializable {
 
     public boolean getAffixRandom(){
         return this.affixRandom;
+    }
+
+    public Map<String, String>  getDataSourceParams() {
+        return this.dataSourceParams;
     }
 
     private void showErrorAndExit(String str){
@@ -291,6 +300,16 @@ public class ParseOptions implements Serializable {
                 } else {
                     showErrorAndExit("Failed to parse command line properties for -Q " + cmd.getOptionValue("Q"));
                 }
+            }
+
+            if(cmd.hasOption("O")) {
+                String[] vals = cmd.getOptionValue("O").split(",");
+                if(vals.length !=2) {
+                    System.err.println("Failed to parse " + cmd.getOptionValue("P"));
+                    System.exit(-1);
+                }
+                /* otherwise we got stuff */
+                dataSourceParams.put(vals[0].trim(), vals[1].trim());
             }
 
         } catch (ParseException e) {

@@ -23,7 +23,7 @@ package com.ibm.crail.spark.tools
 
 import com.ibm.crail.spark.tools.schema.{IntWithPayload, ParquetExample}
 import com.ibm.crail.spark.tools.tpcds.Gen65.Gen65
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrameWriter, SaveMode, SparkSession}
 
 import scala.collection.mutable.ListBuffer
 
@@ -84,7 +84,12 @@ object ParquetGenerator {
         base
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
-      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
+
+      outputDS.write
+        .options(options.getDataSourceParams)
+        .format("parquet")
+        .mode(SaveMode.Overwrite)
+        .save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("IntWithPayload")){
       /* some calculations */
@@ -103,7 +108,11 @@ object ParquetGenerator {
         base
       }
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
-      outputDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput)
+      outputDS.write
+        .options(options.getDataSourceParams)
+        .format("parquet")
+        .mode(SaveMode.Overwrite)
+        .save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("tpcds")){
       val gx = new Gen65(spark, options)
