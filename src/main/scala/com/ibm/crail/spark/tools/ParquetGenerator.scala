@@ -58,6 +58,7 @@ object ParquetGenerator {
       .builder()
       .appName("Spark SQL Parquet Generator")
       .getOrCreate()
+    var warningString = new StringBuilder
 
     spark.sqlContext.setConf("spark.sql.parquet.compression.codec", options.getCompressionType)
 
@@ -115,14 +116,27 @@ object ParquetGenerator {
         .save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("tpcds")){
+      if(options.getAffixRandom == true){
+        warningString.++=("============================================================================================\n")
+        warningString.++=("WARNING: The way currently the random strings are genrated for TPC-DS data, I cannot use affix.\n")
+        warningString.++=("\tCurrently it generates random string sizes of [0, -s], and fills that up. -a says that\n" +
+                          "\tgenerate one string, and keep using it. For TPC-DS the string's content as well as the \n " +
+                          "\tsize changes. \n")
+        warningString.++=("=============================================================================================\n")
+      }
       val gx = new Gen65(spark, options)
-      /* no reading back here */
+      if(options.getShowRows > 0){
+        warningString.++=("=============================================================================================\n")
+        warningString.++=("WARNING: -s does not make sense for TPC-DS as it generates multiple parquet files, not just one.\n")
+        warningString.++=("==============================================================================================")
+      }
     } else {
       throw new Exception("Illegal class name: " + options.getClassName)
     }
-    println("----------------------------------------------------------------")
-    println("ParqGen: Data written out successfully to " + options.getOutput )
-    println("----------------------------------------------------------------")
+    println(warningString.mkString)
+    println("----------------------------------------------------------------------------------------------")
+    println("ParquetGenerator : " + options.getClassName + " data written out successfully to " + options.getOutput )
+    println("----------------------------------------------------------------------------------------------")
     spark.stop()
   }
 }
