@@ -28,7 +28,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
   def nextString() : String = {
     /* we generate strings between [0, variableSize) */
     DataGenerator.getNextString(DataGenerator.getNextInt(options.getVariableSize),
-      options.getAffixRandom)
+      false)
   }
 
   def nextInt() : Int = {
