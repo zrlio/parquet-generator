@@ -24,5 +24,5 @@ package com.ibm.crail.spark.tools.schema
 /**
   * Created by atr on 14.10.16.
   */
-case class IntWithPayload(intIndex: Int, payload: Array[Byte]) {
+case class IntWithPayload(intKey: Int, payload: Array[Byte]) {
 }
