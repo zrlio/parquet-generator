@@ -52,23 +52,25 @@ object DataGenerator extends Serializable {
   }
 
   def getNextByteArray(size: Int, affix: Boolean):Array[Byte] = {
-    this.synchronized{
-      if(affixByteArray == null){
-        affixByteArray = new Array[Byte](size)
-        /* initialize */
-        random.nextBytes(affixByteArray)
-      }
-    }
-
+    val toReturn = new Array[Byte](size)
     if(!affix){
-      /* if not affix, then refresh random values */
-      random.nextBytes(affixByteArray)
+      /* if not affix, then return completely new values in a new array */
+      random.nextBytes(toReturn)
     } else {
+      this.synchronized{
+        if(affixByteArray == null){
+          affixByteArray = new Array[Byte](size)
+          /* initialize */
+          random.nextBytes(affixByteArray)
+        }
+      }
       /* just randomly change 1 byte - this is to make sure parquet
       * does not ignore the data - char will be casted to byte */
       affixByteArray(random.nextInt(size)) = random.nextPrintableChar().toByte
+      /* now we copy affix array */
+      Array.copy(affixByteArray, 0, toReturn, 0, size)
     }
-    affixByteArray
+    toReturn
   }
 
   def getNextInt:Int = {
