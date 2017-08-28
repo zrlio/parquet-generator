@@ -82,7 +82,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val storeDS = storeRDD.toDS().repartition(options.getPartitions)
-  storeDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store.parquet")
+  storeDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store")
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("date_dim") / options.getTasks
@@ -125,7 +125,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val date_dimDS = date_dimRDD.toDS().repartition(options.getPartitions)
-  date_dimDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/date_dim.parquet")
+  date_dimDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/date_dim")
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("item") / options.getTasks
@@ -161,7 +161,7 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val itemDS = itemRDD.toDS().repartition(options.getPartitions)
-  itemDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/item.parquet")
+  itemDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/item")
 
   /* -------------------------------------------------------------------------------------- */
   rowsPerTask = options.getQ65Map.get("store_sales") / options.getTasks
@@ -198,5 +198,5 @@ case class Gen65(spark: SparkSession, options: ParseOptions) {
     base
   }
   val store_salesDS = store_salesRDD.toDS().repartition(options.getPartitions)
-  store_salesDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store_sales.parquet")
+  store_salesDS.write.format("parquet").mode(SaveMode.Overwrite).save(options.getOutput+"/store_sales")
 }
