@@ -1,7 +1,7 @@
-package com.ibm.crail.spark.tools.tpcds.Gen65
+package com.ibm.crail.spark.tools.tpcds
 
-import com.ibm.crail.spark.tools.{DataGenerator, ParseOptions}
 import com.ibm.crail.spark.tools.schema.TPCDS
+import com.ibm.crail.spark.tools.{DataGenerator, ParseOptions}
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
 import scala.collection.mutable.ListBuffer

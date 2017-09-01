@@ -22,8 +22,8 @@
 package com.ibm.crail.spark.tools
 
 import com.ibm.crail.spark.tools.schema.{IntWithPayload, ParquetExample}
-import com.ibm.crail.spark.tools.tpcds.Gen65.Gen65
-import org.apache.spark.sql.{DataFrameWriter, SaveMode, SparkSession}
+import com.ibm.crail.spark.tools.tpcds.{Gen65, TPCDSTables, TPCDSOptions}
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 import scala.collection.mutable.ListBuffer
 
@@ -116,20 +116,37 @@ object ParquetGenerator {
         .save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
     } else if (options.getClassName.equalsIgnoreCase("tpcds")){
-      if(options.getAffixRandom == true){
+      if(options.getAffixRandom){
         warningString.++=("============================================================================================\n")
         warningString.++=("WARNING: The way currently the random strings are genrated for TPC-DS data, I cannot use affix.\n")
         warningString.++=("\tCurrently it generates random string sizes of [0, -s], and fills that up. -a says that\n" +
-                          "\tgenerate one string, and keep using it. For TPC-DS the string's content as well as the \n " +
-                          "\tsize changes. \n")
+          "\tgenerate one string, and keep using it. For TPC-DS the string's content as well as the \n " +
+          "\tsize changes. \n")
         warningString.++=("=============================================================================================\n")
       }
-      val gx = new Gen65(spark, options)
+      val gx = Gen65(spark, options)
       if(options.getShowRows > 0){
         warningString.++=("=============================================================================================\n")
         warningString.++=("WARNING: -s does not make sense for TPC-DS as it generates multiple parquet files, not just one.\n")
         warningString.++=("==============================================================================================")
       }
+    } else if (options.getClassName.equalsIgnoreCase("tpcds-exp")) {
+      val tpcdsOptions = TPCDSOptions()
+
+      val tables = new TPCDSTables(spark.sqlContext,
+        tpcdsOptions.dsdgen_dir,
+        tpcdsOptions.scale_factor)
+
+      //tables.genData("", "", true, true, true, true, "", 100)
+
+      tables.genData(tpcdsOptions.data_location,
+        tpcdsOptions.format,
+        tpcdsOptions.overwrite,
+        tpcdsOptions.partitionTables,
+        tpcdsOptions.clusterByPartitionColumns,
+        tpcdsOptions.filterOutNullPartitionValues,
+        tpcdsOptions.tableFilter,
+        tpcdsOptions.numPartitions)
     } else {
       throw new Exception("Illegal class name: " + options.getClassName)
     }

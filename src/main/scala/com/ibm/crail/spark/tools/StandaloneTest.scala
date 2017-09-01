@@ -20,7 +20,6 @@
  */
 
 package com.ibm.crail.spark.tools
-import scala.reflect.runtime.universe._
 
 /**
   * Created by atr on 07.10.16.

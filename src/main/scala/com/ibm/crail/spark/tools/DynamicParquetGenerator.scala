@@ -1,9 +1,8 @@
 package com.ibm.crail.spark.tools
 
-import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Row, Encoders, SaveMode, SparkSession}
+import org.apache.spark.sql.{Encoders, Row, SaveMode, SparkSession}
 
 import scala.collection.mutable.ListBuffer
 
@@ -30,7 +29,6 @@ object DynamicParquetGenerator {
     spark.sqlContext.setConf("spark.sql.parquet.compression.codec", options.getCompressionType)
 
     // For implicit conversions like converting RDDs to DataFrames
-    import spark.implicits._
 
     /* some calculations */
     require(options.getRowCount % options.getTasks == 0, " Please set rowCount (-r) and tasks (-t) such that " +

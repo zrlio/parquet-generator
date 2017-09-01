@@ -22,11 +22,11 @@
 package com.ibm.crail.spark.tools
 
 import org.apache.spark.sql.types.StructType
+
 import scala.collection.immutable.ListMap
-import scala.reflect.runtime.universe._
 import scala.collection.mutable.ListBuffer
-import scala.reflect.ClassTag
-import scala.reflect.runtime.{ universe => ru }
+import scala.reflect.runtime.universe._
+import scala.reflect.runtime.{universe => ru}
 
 /**
   * Created by atr on 06.10.16.
