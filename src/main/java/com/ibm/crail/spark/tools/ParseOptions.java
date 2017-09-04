@@ -208,10 +208,10 @@ public class ParseOptions implements Serializable {
     }
 
     private void showErrorAndExit(String str){
-        System.err.println("*********************************************");
-        System.err.println("ERROR: " + str);
-        System.err.println("*********************************************");
         show_help();
+        System.err.println("************ ERROR *******************");
+        System.err.println(str);
+        System.err.println("**************************************");
         System.exit(-1);
     }
 
