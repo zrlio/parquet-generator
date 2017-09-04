@@ -40,8 +40,8 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
       *
       *  atr: For anything but text, the convertToSchema is true
       */
-    def generateDataframe(convertToSchema: Boolean, numPartition: Int) = {
-      val generatedData = dataGenerator.generate(sparkContext, name, numPartition, scaleFactor)
+    def generateDataframe(convertToSchema: Boolean, numPartition: Int, numTasks:Int) = {
+      val generatedData = dataGenerator.generate(sparkContext, name, numTasks, numPartition, scaleFactor)
       val rows = generatedData.mapPartitions { iter =>
         iter.map { l =>
           if (convertToSchema) {
@@ -96,12 +96,13 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
                  overwrite: Boolean,
                  clusterByPartitionColumns: Boolean,
                  filterOutNullPartitionValues: Boolean,
-                 numPartitions: Int): Unit = {
+                 numPartitions: Int,
+                numTasks:Int): Unit = {
       val mode = if (overwrite) SaveMode.Overwrite else SaveMode.Ignore
 
       //atr: here I already have a data frame !
       // the format is parquet, hence the condition is true
-      val data = generateDataframe(format != "text", numPartitions)
+      val data = generateDataframe(format != "text", numPartitions, numTasks)
 
       /* atr: the logic below is for partitionColumn. If not then writer = data.write */
       val tempTableName = s"${name}_text"
@@ -198,7 +199,8 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
                clusterByPartitionColumns: Boolean,
                filterOutNullPartitionValues: Boolean,
                tableFilter: String = "",
-               numPartitions: Int = 100): Unit = {
+               numPartitions: Int,
+               numTasks:Int): Unit = {
     /* atr: set of there is paritionColumn or not. The logic below just will override the definition that was
      set in TPCDSTables Seq(Table(...)).
      I am not yet completely sure what does this mean to partiion a column
@@ -220,7 +222,7 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
       val tableLocation = s"$location/${table.name}"
       /* atr: for each table generate data */
       table.genData(tableLocation, format, overwrite, clusterByPartitionColumns,
-        filterOutNullPartitionValues, numPartitions)
+        filterOutNullPartitionValues, numPartitions, numTasks)
     }
   }
 

@@ -21,6 +21,7 @@
 
 package com.ibm.crail.spark.tools;
 
+import com.ibm.crail.spark.tools.tpcds.TPCDSOptions;
 import org.apache.commons.cli.*;
 
 import java.io.Serializable;
@@ -35,7 +36,6 @@ public class ParseOptions implements Serializable {
     private Options options;
     private long rowCount;
     private String output;
-    private String classFileName;
     private String className;
     private int tasks;
     private int partitions;
@@ -44,15 +44,14 @@ public class ParseOptions implements Serializable {
     private String banner;
     private int showRows;
     private int rangeInt;
-    private HashMap<String, Long> q65Map;
-    private int scaleFactor;
     private boolean affixRandom;
-    private Map<String,String> dataSourceParams;
+    private String outputFileFormat;
+    private Map<String,String> dataSinkOptions;
+    private TPCDSOptions tpcdsOptions;
 
     public ParseOptions(){
         this.rowCount = 10;
         this.output = "/ParqGenOutput.parquet";
-        this.classFileName = null;
         this.className ="ParquetExample";
         this.tasks = 1;
         this.partitions = 1;
@@ -60,33 +59,30 @@ public class ParseOptions implements Serializable {
         this.variableSize = 100;
         this.showRows = 0;
         this.rangeInt = Integer.MAX_VALUE;
-        this.q65Map = new HashMap<>(4);
         this.affixRandom = false;
-        this.dataSourceParams = new Hashtable<>();
-
-
-        /* these are the numbers for a 1TB run */
-        //q65Map.put("store", 1002L);
-        //q65Map.put("date_dim", 73049L);
-        //q65Map.put("item", 300000L);
-        //q65Map.put("store_sales", 2879987999L);
-
-        /* these are the numbers for a 1GB run */
-        q65Map.put("store", 12L);
-        q65Map.put("date_dim", 73049L);
-        q65Map.put("item", 18000L);
-        q65Map.put("store_sales", 2880404L);
-        this.scaleFactor = 1;
-
+        this.outputFileFormat = "parquet";
+        this.dataSinkOptions = new Hashtable<>();
+        this.tpcdsOptions = new TPCDSOptions("",
+                "1",
+                "/tpcds",
+                "parquet",
+                true,
+                false,
+                false,
+                false,
+                "",
+                4,
+                false,
+                false
+                );
         options = new Options();
         options.addOption("h", "help", false, "show help");
         options.addOption("a", "affix", false, " affix random payload. Means that in each instance of worker, the "+
                 " variable payload data will be generated once, and used multiple times (default " + this.affixRandom +")");
         options.addOption("r", "rows", true, "<long> total number of rows (default: " + this.rowCount +")");
         options.addOption("c", "case", true, "case class schema currently supported are: \n" +
-                "                             ParquetExample (default), IntWithPayload, and tpcds (WiP). \n" +
+                "                             ParquetExample (default), IntWithPayload, and tpcds. \n" +
                 "                             These classes are in ./schema/ in src.");
-        options.addOption("f", "caseFile", true, "<String> case class file to compile and load (NYI)");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
         options.addOption("t", "tasks", true, "<int> number of tasks to generate this data (default: " + this.tasks+")");
         options.addOption("p", "partitions", true, "<int> number of output partitions (default: " + this.partitions+")");
@@ -99,12 +95,36 @@ public class ParseOptions implements Serializable {
         options.addOption("C", "compress", true, "<String> compression type, valid values are: uncompressed, " +
                 "snappy, gzip, lzo (default: "
                 + this.compressionType+")");
-
-        options.addOption("Q", "q65rows", true, "<Long,Long,Long,Long> 4 or less longs, as #rows for store, date_dim, item, store_sales");
-        options.addOption("F", "factor", true, "<Int> Scaling factor wrt to 1GB config. You can also explicitly specify number of rows using -q");
+        options.addOption("f", "format", true, "<String> output format type (e.g., parquet (default), csv, etc.)");
         options.addOption("O", "options", true, "<str,str> key,value strings that will be passed to the data source of spark in writing." +
         " E.g., for parquet you may want to re-consider parquet.block.size. The default is 128MB (the HDFS block size). ");
 
+//        case class TPCDSOptions(var dsdgen_dir:String = "/home/atr/zrl/external/github/databricks/tpcds-kit/tools/",
+//                var scale_factor:String = "1",
+//                var data_location:String = "file:/data/tpcds-F1",
+//                var format:String = "parquet",
+//                var overwrite:Boolean = true,
+//                var partitionTables:Boolean = false,
+//                var clusterByPartitionColumns:Boolean = false,
+//                var filterOutNullPartitionValues:Boolean = false,
+//                var tableFilter: String = "",
+//                var numPartitions: Int = 4,
+//                var useDoubleForDecimal:Boolean = false,
+//                var seStringForDate: Boolean = false){
+//        }
+
+        options.addOption("tdsd", "dsdgenDir", true, "<String> location of the dsdgen tool");
+        options.addOption("tsf", "scaleFactor", true, "<Int> scaling factor");
+        // output file name is the same -o
+        // format comes from the -f
+        options.addOption("tow", "overWrite", true, "<int> true(1, default) or false(0), pass the int");
+        options.addOption("tpt", "partitionTable", true, "<int> true(1) or false(0, default), pass the int");
+        options.addOption("tcbp", "clusterByPartition", true, "<int> true(1) or false(0, default), pass the int");
+        options.addOption("tfon", "filterOutNullPartitionValues", true, "<int> true(1) or false (0, default), pass the int");
+        options.addOption("ttf", "tableFiler", true, "<String> ?");
+        // num of partition comes from -p
+        options.addOption("tdd", "doubleForDecimal", true, "<int> true(1) or false(0, default), pass the int");
+        options.addOption("tsd","stringForDate", true, "<int> true(1) or false(0, default), pass the int");
 
         String banner2 = "(_____ \\                / _____)            \n" +
                 " _____) )___  ____ ____| /  ___  ____ ____  \n" +
@@ -132,10 +152,6 @@ public class ParseOptions implements Serializable {
 
     public String getOutput(){
         return this.output;
-    }
-
-    public String getClassFileName(){
-        return this.classFileName;
     }
 
     public String getClassName() {
@@ -174,25 +190,21 @@ public class ParseOptions implements Serializable {
         return this.rangeInt;
     }
 
-    public void show_help() {
+    private void show_help() {
         HelpFormatter formatter = new HelpFormatter();
-        formatter.printHelp("Parqgen", options);
-    }
-
-    public HashMap<String, Long>getQ65Map() {
-        return q65Map;
-    }
-
-    public int getScaleFactor(){
-        return scaleFactor;
+        formatter.printHelp("parquet-generator", options);
     }
 
     public boolean getAffixRandom(){
         return this.affixRandom;
     }
 
-    public Map<String, String>  getDataSourceParams() {
-        return this.dataSourceParams;
+    public Map<String, String> getDataSinkOptions() {
+        return this.dataSinkOptions;
+    }
+
+    public TPCDSOptions getTpcdsOptions(){
+        return this.tpcdsOptions;
     }
 
     private void showErrorAndExit(String str){
@@ -206,9 +218,6 @@ public class ParseOptions implements Serializable {
     public void parse(String[] args) {
         CommandLineParser parser = new GnuParser();
         CommandLine cmd = null;
-        boolean cset = false;
-        boolean q65set = false;
-        boolean setr = false;
         try {
             cmd = parser.parse(options, args);
 
@@ -223,22 +232,20 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("r")) {
                 this.rowCount = Long.parseLong(cmd.getOptionValue("r").trim());
-                setr = true;
             }
 
             if (cmd.hasOption("o")) {
                 this.output = cmd.getOptionValue("o").trim();
+                this.tpcdsOptions.data_location_$eq(this.output);
             }
 
             if (cmd.hasOption("f")) {
-                this.classFileName = cmd.getOptionValue("f").trim();
+                this.outputFileFormat = cmd.getOptionValue("f").trim();
+                this.tpcdsOptions.format_$eq(this.outputFileFormat);
             }
 
             if (cmd.hasOption("c")) {
                 this.className = cmd.getOptionValue("c").trim();
-                cset = true;
-                if(this.className.compareToIgnoreCase("tpcds") == 0)
-                    q65set = true;
             }
 
             if (cmd.hasOption("C")) {
@@ -255,6 +262,7 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("p")) {
                 this.partitions = Integer.parseInt(cmd.getOptionValue("p").trim());
+                this.tpcdsOptions.numPartitions_$eq(this.partitions);
             }
 
             if (cmd.hasOption("t")) {
@@ -264,43 +272,51 @@ public class ParseOptions implements Serializable {
             if (cmd.hasOption("R")) {
                 this.rangeInt = Integer.parseInt(cmd.getOptionValue("R").trim());
             }
+            if(cmd.hasOption("tdsd")){
+                this.tpcdsOptions.dsdgen_dir_$eq(cmd.getOptionValue("tdsd").trim());
+             }
 
-            if (cmd.hasOption("F")) {
-                this.scaleFactor= Integer.parseInt(cmd.getOptionValue("F").trim());
-                /* if you get a scale factor when update */
-                q65Map.put("store", q65Map.get("store") * this.scaleFactor);
-                q65Map.put("date_dim", q65Map.get("date_dim") * this.scaleFactor);
-                q65Map.put("item", q65Map.get("item")  * this.scaleFactor);
-                q65Map.put("store_sales", q65Map.get("store_sales")  * this.scaleFactor);
+            if(cmd.hasOption("tsf")){
+                this.tpcdsOptions.scale_factor_$eq(cmd.getOptionValue("tsf").trim());
             }
-
-            if (cmd.hasOption("Q")) {
-                /* now we can have 4 or less longs */
-                String[] split = cmd.getOptionValue("Q").split(",");
-                if(split.length == 4){
-                    q65Map.put("store", Long.parseLong(split[0].trim()));
-                    q65Map.put("date_dim", Long.parseLong(split[1].trim()));
-                    q65Map.put("item", Long.parseLong(split[2].trim()));
-                    q65Map.put("store_sales", Long.parseLong(split[3].trim()));
-
-                } else if(split.length == 3){
-
-                    q65Map.put("store", Long.parseLong(split[0].trim()));
-                    q65Map.put("date_dim", Long.parseLong(split[1].trim()));
-                    q65Map.put("item", Long.parseLong(split[2].trim()));
-
-                } else if(split.length == 2){
-
-                    q65Map.put("store", Long.parseLong(split[0].trim()));
-                    q65Map.put("date_dim", Long.parseLong(split[1].trim()));
-
-                } else if(split.length == 1){
-
-                    q65Map.put("store", Long.parseLong(split[0].trim()));
-
-                } else {
-                    showErrorAndExit("Failed to parse command line properties for -Q " + cmd.getOptionValue("Q"));
-                }
+            if(cmd.hasOption("tow")){
+                if(Integer.parseInt(cmd.getOptionValue("tow").trim()) ==  0)
+                    this.tpcdsOptions.overwrite_$eq(false);
+                else
+                    this.tpcdsOptions.overwrite_$eq(true);
+            }
+            if(cmd.hasOption("tpt")){
+                if(Integer.parseInt(cmd.getOptionValue("tpt").trim()) ==  0)
+                    this.tpcdsOptions.partitionTables_$eq(false);
+                else
+                    this.tpcdsOptions.partitionTables_$eq(true);
+            }
+            if(cmd.hasOption("tcbp")){
+                if(Integer.parseInt(cmd.getOptionValue("tcbp").trim()) ==  0)
+                    this.tpcdsOptions.clusterByPartitionColumns_$eq(false);
+                else
+                    this.tpcdsOptions.clusterByPartitionColumns_$eq(true);
+            }
+            if(cmd.hasOption("tfon")){
+                if(Integer.parseInt(cmd.getOptionValue("tfon").trim()) ==  0)
+                    this.tpcdsOptions.filterOutNullPartitionValues_$eq(false);
+                else
+                    this.tpcdsOptions.filterOutNullPartitionValues_$eq(true);
+            }
+            if(cmd.hasOption("tff")){
+                this.tpcdsOptions.tableFilter_$eq(cmd.getOptionValue("tff").trim());
+            }
+            if(cmd.hasOption("tdd")){
+                if(Integer.parseInt(cmd.getOptionValue("tdd").trim()) ==  0)
+                    this.tpcdsOptions.useDoubleForDecimal_$eq(false);
+                else
+                    this.tpcdsOptions.useDoubleForDecimal_$eq(true);
+            }
+            if(cmd.hasOption("tsd")){
+                if(Integer.parseInt(cmd.getOptionValue("tsd").trim()) ==  0)
+                    this.tpcdsOptions.seStringForDate_$eq(false);
+                else
+                    this.tpcdsOptions.seStringForDate_$eq(true);
             }
 
             if(cmd.hasOption("O")) {
@@ -310,23 +326,17 @@ public class ParseOptions implements Serializable {
                     System.exit(-1);
                 }
                 /* otherwise we got stuff */
-                dataSourceParams.put(vals[0].trim(), vals[1].trim());
+                dataSinkOptions.put(vals[0].trim(), vals[1].trim());
             }
 
         } catch (ParseException e) {
             showErrorAndExit("Failed to parse command line properties" + e);
         }
-        /* do some sanity checks */
-        if(this.classFileName != null && (this.className != null && cset) ){
-            showErrorAndExit("You cannot define both -f and -c. Please use one");
-        }
-        /* this will never happen as this.className is defined to a default class */
-        if(this.classFileName == null && this.className == null){
-            showErrorAndExit("You have to define atleast one class, use either -f XOR -c.");
-        }
-        /* now say about tpcds */
-        if(q65set && setr){
-            showErrorAndExit("You are generating TPC-DS data, use -Q instead of -r for #rows.");
+
+        if(this.className.compareToIgnoreCase("tpcds") == 0){
+            if(this.tpcdsOptions.dsdgen_dir().compareToIgnoreCase("") == 0){
+                showErrorAndExit("Please set the directory for dsdgen with -tdsd");
+            }
         }
     }
 }

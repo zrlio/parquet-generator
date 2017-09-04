@@ -10,6 +10,7 @@ trait TPCDataGenerator extends Serializable {
   def generate(
                 sparkContext: SparkContext,
                 name: String,
+                numTask:Int,
                 partitions: Int,
                 scaleFactor: String): RDD[String]
 }

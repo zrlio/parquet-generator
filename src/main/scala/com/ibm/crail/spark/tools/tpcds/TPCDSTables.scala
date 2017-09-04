@@ -10,9 +10,9 @@ import org.apache.spark.sql.SQLContext
 class DSDGEN(dsdgenDir: String) extends TPCDataGenerator {
   val dsdgen = s"$dsdgenDir/dsdgen"
 
-  def generate(sparkContext: SparkContext, name: String, partitions: Int, scaleFactor: String): RDD[String] = {
+  def generate(sparkContext: SparkContext, name: String, numTasks:Int, numPartition: Int, scaleFactor: String): RDD[String] = {
     val generatedData = {
-      sparkContext.parallelize(1 to partitions, partitions).flatMap { i =>
+      sparkContext.parallelize(1 to numTasks, numTasks).flatMap { i =>
         val localToolsDir = if (new java.io.File(dsdgen).exists) {
           dsdgenDir
         } else if (new java.io.File(s"/$dsdgen").exists) {
@@ -22,7 +22,7 @@ class DSDGEN(dsdgenDir: String) extends TPCDataGenerator {
         }
 
         // Note: RNGSEED is the RNG seed used by the data generator. Right now, it is fixed to 100.
-        val parallel = if (partitions > 1) s"-parallel $partitions -child $i" else ""
+        val parallel = if (numTasks > 1) s"-parallel $numTasks -child $i" else ""
         val commands = Seq(
           "bash", "-c",
           s"cd $localToolsDir && ./dsdgen -table $name -filter Y -scale $scaleFactor -RNGSEED 100 $parallel")
@@ -31,7 +31,7 @@ class DSDGEN(dsdgenDir: String) extends TPCDataGenerator {
       }
     }
     generatedData.setName(s"$name, sf=$scaleFactor, strings")
-    generatedData
+    generatedData.repartition(numTasks)
   }
 }
 
