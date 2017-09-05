@@ -33,19 +33,19 @@ object ParquetGenerator {
 
 
   def readAndReturnRows(spark: SparkSession, fileName: String, showRows: Int, expectedRows: Long): Unit = {
-    /* now we read it back and check */
-    val inputDF = spark.read.parquet(fileName)
-    val items = inputDF.count()
-    val partitions = SparkTools.countNumPartitions(spark, inputDF)
     if(showRows > 0) {
+      /* now we read it back and check */
+      val inputDF = spark.read.parquet(fileName)
+      val items = inputDF.count()
+      val partitions = SparkTools.countNumPartitions(spark, inputDF)
       inputDF.show(showRows)
-    }
-    println("----------------------------------------------------------------")
-    println("RESULTS: file " + fileName + " contains " + items + " rows and makes " + partitions + " partitions when read")
-    println("----------------------------------------------------------------")
-    if(expectedRows > 0 ) {
-      require(items == expectedRows,
-        "Number of rows do not match, counted: " + items + " expected: " + expectedRows)
+      println("----------------------------------------------------------------")
+      println("RESULTS: file " + fileName + " contains " + items + " rows and makes " + partitions + " partitions when read")
+      println("----------------------------------------------------------------")
+      if (expectedRows > 0) {
+        require(items == expectedRows,
+          "Number of rows do not match, counted: " + items + " expected: " + expectedRows)
+      }
     }
   }
 
@@ -88,7 +88,7 @@ object ParquetGenerator {
 
       outputDS.write
         .options(options.getDataSinkOptions)
-        .format("parquet")
+        .format(options.getOutputFileFormat)
         .mode(SaveMode.Overwrite)
         .save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
@@ -111,7 +111,7 @@ object ParquetGenerator {
       val outputDS = inputRDD.toDS().repartition(options.getPartitions)
       outputDS.write
         .options(options.getDataSinkOptions)
-        .format("parquet")
+        .format(options.getOutputFileFormat)
         .mode(SaveMode.Overwrite)
         .save(options.getOutput)
       readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)

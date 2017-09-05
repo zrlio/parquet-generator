@@ -203,6 +203,10 @@ public class ParseOptions implements Serializable {
         return this.dataSinkOptions;
     }
 
+    public String getOutputFileFormat(){
+        return this.outputFileFormat;
+    }
+
     public TPCDSOptions getTpcdsOptions(){
         return this.tpcdsOptions;
     }
