@@ -97,7 +97,9 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
                  clusterByPartitionColumns: Boolean,
                  filterOutNullPartitionValues: Boolean,
                  numPartitions: Int,
-                numTasks:Int): Unit = {
+                numTasks:Int,
+                outOf:Int,
+                totalTables:Int): Unit = {
       val mode = if (overwrite) SaveMode.Overwrite else SaveMode.Ignore
 
       //atr: here I already have a data frame !
@@ -145,8 +147,8 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
       if (partitionColumns.nonEmpty) {
         writer.partitionBy(partitionColumns : _*)
       }
-      println(s"Generating table $name in database to $location with save mode $mode.")
-      log.info(s"Generating table $name in database to $location with save mode $mode.")
+      println(s"${outOf}/${totalTables} Generating table $name in database to $location with save mode $mode.")
+      log.info(s"${outOf}/${totalTables} Generating table $name in database to $location with save mode $mode.")
       writer.save(location)
       sqlContext.dropTempTable(tempTableName)
     }
@@ -217,12 +219,14 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
         throw new RuntimeException("Bad table name filter: " + tableFilter)
       }
     }
-
+    val totalTables = tablesToBeGenerated.size
+    var i = 1
     tablesToBeGenerated.foreach { table =>
       val tableLocation = s"$location/${table.name}"
       /* atr: for each table generate data */
       table.genData(tableLocation, format, overwrite, clusterByPartitionColumns,
-        filterOutNullPartitionValues, numPartitions, numTasks)
+        filterOutNullPartitionValues, numPartitions, numTasks, i, totalTables)
+      i+=1
     }
   }
 
