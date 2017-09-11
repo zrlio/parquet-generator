@@ -23,9 +23,7 @@ package com.ibm.crail.spark.tools;
 
 import com.ibm.crail.spark.tools.tpcds.TPCDSOptions;
 import org.apache.commons.cli.*;
-
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
