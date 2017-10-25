@@ -119,7 +119,7 @@ public class ParseOptions implements Serializable {
         options.addOption("tpt", "partitionTable", true, "<int> true(1) or false(0, default), pass the int");
         options.addOption("tcbp", "clusterByPartition", true, "<int> true(1) or false(0, default), pass the int");
         options.addOption("tfon", "filterOutNullPartitionValues", true, "<int> true(1) or false (0, default), pass the int");
-        options.addOption("ttf", "tableFiler", true, "<String> ?");
+        options.addOption("tff", "tableFiler", true, "<String> To choose a specific table to generate from the TPC-DS dataset");
         // num of partition comes from -p
         options.addOption("tdd", "doubleForDecimal", true, "<int> true(1) or false(0, default), pass the int");
         options.addOption("tsd","stringForDate", true, "<int> true(1) or false(0, default), pass the int");
