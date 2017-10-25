@@ -38,7 +38,7 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
       *  If convertToSchema is true, the data from generator will be parsed into columns and
       *  converted to `schema`. Otherwise, it just outputs the raw data (as a single STRING column).
       *
-      *  atr: For anything but text, the convertToSchema is true
+      *  atr: For anything but the text format, the convertToSchema is true
       */
     def generateDataframe(convertToSchema: Boolean, numPartition: Int, numTasks:Int) = {
       val generatedData = dataGenerator.generate(sparkContext, name, numTasks, numPartition, scaleFactor)
