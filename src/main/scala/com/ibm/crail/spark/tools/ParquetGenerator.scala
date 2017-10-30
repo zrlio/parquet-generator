@@ -57,6 +57,7 @@ object ParquetGenerator {
     val spark = SparkSession
       .builder()
       .appName("Spark SQL Parquet Generator")
+      .enableHiveSupport()
       .getOrCreate()
     var warningString = new StringBuilder
 
