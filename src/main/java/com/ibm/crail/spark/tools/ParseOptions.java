@@ -23,9 +23,16 @@ package com.ibm.crail.spark.tools;
 
 import com.ibm.crail.spark.tools.tpcds.TPCDSOptions;
 import org.apache.commons.cli.*;
+import scala.Tuple2;
+import scala.collection.JavaConverters;
+import scala.collection.immutable.Map$;
+import scala.collection.immutable.Seq;
+
 import java.io.Serializable;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by atr on 9/30/16.
@@ -47,6 +54,16 @@ public class ParseOptions implements Serializable {
     private Map<String,String> dataSinkOptions;
     private TPCDSOptions tpcdsOptions;
 
+    static <K, V> scala.collection.immutable.Map<K, V> toScalaImmutableMap(java.util.Map<K, V> javaMap) {
+        final java.util.List<scala.Tuple2<K, V>> list = new java.util.ArrayList<>(javaMap.size());
+        for (final java.util.Map.Entry<K, V> entry : javaMap.entrySet()) {
+            list.add(scala.Tuple2.apply(entry.getKey(), entry.getValue()));
+        }
+        final scala.collection.Seq<Tuple2<K, V>> seq = scala.collection.JavaConverters.asScalaBufferConverter(list).asScala().toSeq();
+        return (scala.collection.immutable.Map<K, V>) scala.collection.immutable.Map$.MODULE$.apply(seq);
+    }
+
+
     public ParseOptions(){
         this.rowCount = 10;
         this.output = "/ParqGenOutput.parquet";
@@ -59,11 +76,14 @@ public class ParseOptions implements Serializable {
         this.rangeInt = Integer.MAX_VALUE;
         this.affixRandom = false;
         this.outputFileFormat = "parquet";
-        this.dataSinkOptions = new Hashtable<>();
+        this.dataSinkOptions = new Hashtable<String, String>();
+
         this.tpcdsOptions = new TPCDSOptions("",
                 "1",
                 "/tpcds",
                 "parquet",
+                ParseOptions
+        .toScalaImmutableMap(this.dataSinkOptions),
                 true,
                 false,
                 false,

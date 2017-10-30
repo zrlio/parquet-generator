@@ -92,11 +92,12 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
     }
 
     def genData(location: String,
-                 format: String,
-                 overwrite: Boolean,
-                 clusterByPartitionColumns: Boolean,
-                 filterOutNullPartitionValues: Boolean,
-                 numPartitions: Int,
+                format: String,
+                formatOptions:Map[String, String],
+                overwrite: Boolean,
+                clusterByPartitionColumns: Boolean,
+                filterOutNullPartitionValues: Boolean,
+                numPartitions: Int,
                 numTasks:Int,
                 outOf:Int,
                 totalTables:Int): Unit = {
@@ -143,7 +144,7 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
         data.write
       }
 
-      writer.format(format).mode(mode)
+      writer.format(format).options(formatOptions).mode(mode)
       if (partitionColumns.nonEmpty) {
         writer.partitionBy(partitionColumns : _*)
       }
@@ -196,6 +197,7 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
   def genData(
                location: String,
                format: String,
+               formatOptions:Map[String, String],
                overwrite: Boolean,
                partitionTables: Boolean,
                clusterByPartitionColumns: Boolean,
@@ -224,7 +226,7 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
     tablesToBeGenerated.foreach { table =>
       val tableLocation = s"$location/${table.name}"
       /* atr: for each table generate data */
-      table.genData(tableLocation, format, overwrite, clusterByPartitionColumns,
+      table.genData(tableLocation, format, formatOptions, overwrite, clusterByPartitionColumns,
         filterOutNullPartitionValues, numPartitions, numTasks, i, totalTables)
       i+=1
     }

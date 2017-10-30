@@ -7,6 +7,7 @@ case class TPCDSOptions(var dsdgen_dir:String = "/home/atr/zrl/external/github/d
                         var scale_factor:String = "1",
                         var data_location:String = "file:/data/tpcds-F1",
                         var format:String = "parquet",
+                        var formatOptions:Map[String, String] = Map[String, String](),
                         var overwrite:Boolean = true,
                         var partitionTables:Boolean = false,
                         var clusterByPartitionColumns:Boolean = false,

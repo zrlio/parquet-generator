@@ -61,7 +61,9 @@ object ParquetGenerator {
       .getOrCreate()
     var warningString = new StringBuilder
 
+    // for parquet it takes "uncompressed" and for ORC it takes "none" - huh !
     spark.sqlContext.setConf("spark.sql.parquet.compression.codec", options.getCompressionType)
+    spark.sqlContext.setConf("orc.compress", "none")
 
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._
@@ -121,8 +123,11 @@ object ParquetGenerator {
       val tables = new TPCDSTables(spark.sqlContext,
         tpcdsOptions.dsdgen_dir,
         tpcdsOptions.scale_factor)
+      import scala.collection.JavaConverters._
+      val immMap = options.getDataSinkOptions.asScala
       tables.genData(tpcdsOptions.data_location,
         tpcdsOptions.format,
+        immMap.toMap,
         tpcdsOptions.overwrite,
         tpcdsOptions.partitionTables,
         tpcdsOptions.clusterByPartitionColumns,
