@@ -78,12 +78,22 @@ format in `/myfile.parquet` in 12 different partitions.
 -t 8 
 -p 2
 -tsf 2 
--tdsd ~/dsdgen/tools/
+-tdsd ~/tpcds-kit/tools/
 ```
 **Note:** on a cluster the location of dsdgen directory should be accessible on each machine.   
 
 **Acknowledgement:** The data generation logic is derived from https://github.com/databricks/spark-sql-perf
-  
+
+#### How to get and build the `dsdgen-kit` tool 
+As described [here](https://github.com/databricks/spark-sql-perf#setup-a-benchmark), the login uses a slightly modified version of the original TPC-DS toolset. It can be downloaded and build from 
+ [https://github.com/databricks/tpcds-kit](https://github.com/databricks/tpcds-kit) as
+ 
+```bash
+$ git clone https://github.com/databricks/tpcds-kit.git
+$ cd ./tpcds-kit/tools/
+$ make OS=LINUX
+```
+
 ## Contributions
 
 PRs are always welcome. Please fork, and make necessary modifications 
