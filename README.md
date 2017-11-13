@@ -93,6 +93,16 @@ $ git clone https://github.com/databricks/tpcds-kit.git
 $ cd ./tpcds-kit/tools/
 $ make OS=LINUX
 ```
+### Good-to-know 
+```bash
+ 17/11/13 14:10:01 12276 main INFO HiveUtils: Initializing HiveMetastoreConnection version 1.2.1 using Spark classes.
+ Exception in thread "main" java.lang.IllegalArgumentException: Error while instantiating 'org.apache.spark.sql.hive.HiveSessionStateBuilder':
+	at org.apache.spark.sql.SparkSession$.org$apache$spark$sql$SparkSession$$instantiateSessionState(SparkSession.scala:1053)
+	at org.apache.spark.sql.SparkSession$$anonfun$sessionState$2.apply(SparkSession.scala:130)
+	at org.apache.spark.sql.SparkSession$$anonfun$sessionState$2.apply(SparkSession.scala:130)
+	at scala.Option.getOrElse(Option.scala:121)
+```
+In a recent commit, I have introduced hive and ORC dependencies. In case you run into above problem then probably you have `spark.driver.userClassPathFirst=true` set. See https://issues.apache.org/jira/browse/SPARK-16680
 
 ## Contributions
 
