@@ -4,10 +4,6 @@ package com.ibm.crail.spark.tools.tpcds
   * Created by atr on 01.09.17.
   */
 
-import java.util.concurrent.LinkedBlockingQueue
-
-import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Row, SQLContext, SaveMode}

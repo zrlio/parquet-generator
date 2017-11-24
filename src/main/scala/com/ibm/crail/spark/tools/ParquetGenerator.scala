@@ -22,7 +22,7 @@
 package com.ibm.crail.spark.tools
 
 import com.ibm.crail.spark.tools.schema.{IntWithPayload, ParquetExample}
-import com.ibm.crail.spark.tools.tpcds.{TPCDSTables, TPCDSOptions}
+import com.ibm.crail.spark.tools.tpcds.TPCDSTables
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
 import scala.collection.mutable.ListBuffer
@@ -122,7 +122,9 @@ object ParquetGenerator {
       val tpcdsOptions = options.getTpcdsOptions
       val tables = new TPCDSTables(spark.sqlContext,
         tpcdsOptions.dsdgen_dir,
-        tpcdsOptions.scale_factor)
+        tpcdsOptions.scale_factor,
+        tpcdsOptions.useDoubleForDecimal,
+        tpcdsOptions.seStringForDate)
       import scala.collection.JavaConverters._
       val immMap = options.getDataSinkOptions.asScala
       tables.genData(tpcdsOptions.data_location,

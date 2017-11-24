@@ -1,6 +1,7 @@
 package com.ibm.crail.spark.tools.tpcds
 
 import java.util.concurrent.LinkedBlockingQueue
+
 import scala.collection.immutable.Stream
 import scala.sys.process._
 

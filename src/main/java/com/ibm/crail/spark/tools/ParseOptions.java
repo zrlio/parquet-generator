@@ -24,15 +24,10 @@ package com.ibm.crail.spark.tools;
 import com.ibm.crail.spark.tools.tpcds.TPCDSOptions;
 import org.apache.commons.cli.*;
 import scala.Tuple2;
-import scala.collection.JavaConverters;
-import scala.collection.immutable.Map$;
-import scala.collection.immutable.Seq;
 
 import java.io.Serializable;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Created by atr on 9/30/16.
