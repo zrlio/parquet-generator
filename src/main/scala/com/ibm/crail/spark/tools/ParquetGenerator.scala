@@ -21,7 +21,7 @@
 
 package com.ibm.crail.spark.tools
 
-import com.ibm.crail.spark.tools.schema.{IntSchema, IntWithPayload, ParquetExample}
+import com.ibm.crail.spark.tools.schema._
 import com.ibm.crail.spark.tools.tpcds.TPCDSTables
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{SaveMode, SparkSession}
@@ -50,7 +50,7 @@ object ParquetGenerator {
     }
   }
 
-  private def doParquetExample(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Long, options:ParseOptions):Unit = {
+  private def doParquetExample(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
     val outputRdd = rdd.flatMap { p =>
       val base = new ListBuffer[ParquetExample]()
       /* now we want to generate a loop and save the parquet file */
@@ -74,7 +74,7 @@ object ParquetGenerator {
     readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
   }
 
-  private def doIntWithPayload(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Long, options:ParseOptions):Unit = {
+  private def doIntWithPayload(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
     val outputRdd = rdd.flatMap { p =>
       val base = new ListBuffer[IntWithPayload]()
       /* now we want to generate a loop and save the parquet file */
@@ -96,13 +96,81 @@ object ParquetGenerator {
     readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
   }
 
-  private def doIntOnly(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Long, options:ParseOptions):Unit = {
+  private def doIntWithPayload2x(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
     val outputRdd = rdd.flatMap { p =>
-      val base = new ListBuffer[IntSchema]()
+      val base = new ListBuffer[IntWithPayload2x]()
       /* now we want to generate a loop and save the parquet file */
       val size = options.getVariableSize
       for (a <- 0L until rowsPerTask) {
-        base += IntSchema(DataGenerator.getNextInt(options.getRangeInt))
+        base += IntWithPayload2x(DataGenerator.getNextInt(options.getRangeInt),
+          DataGenerator.getNextByteArray(DataGenerator.getNextInt(size),
+            options.getAffixRandom),
+          DataGenerator.getNextLong,
+          DataGenerator.getNextByteArray(DataGenerator.getNextInt(size),
+            options.getAffixRandom),
+          DataGenerator.getNextDouble)
+      }
+      base
+    }
+    import spark.implicits._
+    val outputDS = outputRdd.toDS().repartition(options.getPartitions)
+    outputDS.write
+      .options(options.getDataSinkOptions)
+      .format(options.getOutputFileFormat)
+      .mode(SaveMode.Overwrite)
+      .save(options.getOutput)
+    readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
+  }
+
+  private def doIntOnly(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
+    val outputRdd = rdd.flatMap { p =>
+      val base = new Array[IntOnly](rowsPerTask)
+      /* now we want to generate a loop and save the parquet file */
+      val size = options.getVariableSize
+      val baseInt = DataGenerator.getNextInt
+      for (a <- 0 until rowsPerTask) {
+        base(a) = IntOnly((baseInt + a).toInt)
+      }
+      base
+    }
+    import spark.implicits._
+    val outputDS = outputRdd.toDS().repartition(options.getPartitions)
+    outputDS.write
+      .options(options.getDataSinkOptions)
+      .format(options.getOutputFileFormat)
+      .mode(SaveMode.Overwrite)
+      .save(options.getOutput)
+    readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
+  }
+
+
+  private def doLongOnly(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
+    val outputRdd = rdd.flatMap { p =>
+      val base = new ListBuffer[LongOnly]()
+      /* now we want to generate a loop and save the parquet file */
+      val size = options.getVariableSize
+      for (a <- 0L until rowsPerTask) {
+        base += LongOnly(DataGenerator.getNextLong)
+      }
+      base
+    }
+    import spark.implicits._
+    val outputDS = outputRdd.toDS().repartition(options.getPartitions)
+    outputDS.write
+      .options(options.getDataSinkOptions)
+      .format(options.getOutputFileFormat)
+      .mode(SaveMode.Overwrite)
+      .save(options.getOutput)
+    readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
+  }
+
+  private def doDoubleOnly(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
+    val outputRdd = rdd.flatMap { p =>
+      val base = new ListBuffer[DoubleOnly]()
+      /* now we want to generate a loop and save the parquet file */
+      val size = options.getVariableSize
+      for (a <- 0L until rowsPerTask) {
+        base += DoubleOnly(DataGenerator.getNextDouble)
       }
       base
     }
@@ -121,12 +189,19 @@ object ParquetGenerator {
       "rowCount%tasks == 0, currently, rows: " + options.getRowCount + " tasks " + options.getTasks)
     val rowsPerTask = options.getRowCount / options.getTasks
     val inputRDD = spark.sparkContext.parallelize(0 until options.getTasks, options.getTasks)
+    require(rowsPerTask <= Integer.MAX_VALUE)
     if(options.getClassName.equalsIgnoreCase("ParquetExample")){
-      doParquetExample(spark, inputRDD, rowsPerTask, options)
+      doParquetExample(spark, inputRDD,      rowsPerTask.toInt, options)
     } else if(options.getClassName.equalsIgnoreCase("IntWithPayload")){
-      doIntWithPayload(spark, inputRDD, rowsPerTask, options)
+      doIntWithPayload(spark, inputRDD,      rowsPerTask.toInt, options)
+    } else if(options.getClassName.equalsIgnoreCase("IntWithPayload2x")){
+      doIntWithPayload2x(spark, inputRDD,      rowsPerTask.toInt, options)
     } else if (options.getClassName.equalsIgnoreCase("IntOnly")){
-      doIntOnly(spark, inputRDD, rowsPerTask, options)
+      doIntOnly(spark, inputRDD,      rowsPerTask.toInt, options)
+    } else if (options.getClassName.equalsIgnoreCase("LongOnly")){
+      doLongOnly(spark, inputRDD,      rowsPerTask.toInt, options)
+    } else if (options.getClassName.equalsIgnoreCase("DoubleOnly")){
+      doDoubleOnly(spark, inputRDD,      rowsPerTask.toInt, options)
     } else {
       throw new Exception(" Illegal class name " + options.getClassName)
     }

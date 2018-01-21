@@ -31,7 +31,8 @@ object DataGenerator extends Serializable {
 
   /* affix payload variables */
   var affixStringBuilder:StringBuilder = null
-  var affixByteArray:Array[Byte] = null
+  val baseRandomArray:Array[Byte] = new Array[Byte](1024*1024)
+  random.nextBytes(this.baseRandomArray)
 
   def getNextString(size: Int, affix: Boolean):String = {
     if(affix){
@@ -57,18 +58,22 @@ object DataGenerator extends Serializable {
       /* if not affix, then return completely new values in a new array */
       random.nextBytes(toReturn)
     } else {
-      this.synchronized{
-        if(affixByteArray == null){
-          affixByteArray = new Array[Byte](size)
-          /* initialize */
-          random.nextBytes(affixByteArray)
-        }
-      }
-      /* just randomly change 1 byte - this is to make sure parquet
+      /* now we need to fill out the passed array from our source */
+      var leftBytes = toReturn.length
+      var srcOffset = 0
+      var dstOffset = 0
+      while(leftBytes > 0){
+        val toCopy = Math.min(leftBytes, this.baseRandomArray.length)
+        /* just randomly change 1 byte - this is to make sure parquet
       * does not ignore the data - char will be casted to byte */
-      affixByteArray(random.nextInt(size)) = random.nextPrintableChar().toByte
-      /* now we copy affix array */
-      Array.copy(affixByteArray, 0, toReturn, 0, size)
+        this.baseRandomArray(random.nextInt(toCopy)) = random.nextPrintableChar().toByte
+        Array.copy(this.baseRandomArray, srcOffset, toReturn, dstOffset, toCopy)
+        dstOffset+=toCopy
+        srcOffset+= toCopy
+        if (srcOffset == this.baseRandomArray.length)
+          srcOffset = 0
+        leftBytes-=toCopy
+      }
     }
     toReturn
   }

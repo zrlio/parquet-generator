@@ -94,7 +94,7 @@ public class ParseOptions implements Serializable {
                 " variable payload data will be generated once, and used multiple times (default " + this.affixRandom +")");
         options.addOption("r", "rows", true, "<long> total number of rows (default: " + this.rowCount +")");
         options.addOption("c", "case", true, "case class schema currently supported are: \n" +
-                "                             ParquetExample (default), IntWithPayload, and tpcds. \n" +
+                "                             ParquetExample (default), IntWithPayload, IntWithPayload2x, and tpcds. \n" +
                 "                             These classes are in ./schema/ in src.");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
         options.addOption("t", "tasks", true, "<int> number of tasks to generate this data (default: " + this.tasks+")");

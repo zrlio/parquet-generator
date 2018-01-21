@@ -55,6 +55,7 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
           }
         }
       }
+      // atr: here the schema is StringType, which is then converted to the acutal data type here.
 
       if (convertToSchema) {
         val stringData =
