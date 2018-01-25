@@ -258,6 +258,10 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("f")) {
                 this.outputFileFormat = cmd.getOptionValue("f").trim();
+                if(this.outputFileFormat.compareToIgnoreCase("orc") == 0){
+                    // for ORC set the default compression to none as
+                    this.dataSinkOptions.put("orc.compress","none");
+                }
                 this.tpcdsOptions.format_$eq(this.outputFileFormat);
             }
 
