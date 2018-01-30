@@ -207,6 +207,10 @@ object ParquetGenerator {
     }
   }
 
+  // compression notes:
+  // Parquet takes : The value of spark.sql.parquet.compression.codec should be one of uncompressed, snappy, gzip, lzo
+  // ORC takes: Available codecs are uncompressed, lzo, snappy, zlib, none.
+
   def main(args: Array[String]) {
     val options = new ParseOptions()
     println(options.getBanner)
@@ -219,9 +223,10 @@ object ParquetGenerator {
       .getOrCreate()
     var warningString = new StringBuilder
 
-    // for parquet it takes "uncompressed" and for ORC it takes "none" - huh !
-    spark.sqlContext.setConf("spark.sql.parquet.compression.codec", options.getCompressionType)
-    spark.sqlContext.setConf("orc.compress", "none")
+    if(options.getOutputFileFormat.compareToIgnoreCase("parquet") == 0) {
+      // for parquet it takes "uncompressed" and for ORC it takes "none" - huh !
+      spark.sqlContext.setConf("spark.sql.parquet.compression.codec", options.getCompressionType)
+    }
 
     // For implicit conversions like converting RDDs to DataFrames
     import spark.implicits._

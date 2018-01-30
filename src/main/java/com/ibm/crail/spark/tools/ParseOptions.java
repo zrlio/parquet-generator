@@ -258,10 +258,6 @@ public class ParseOptions implements Serializable {
 
             if (cmd.hasOption("f")) {
                 this.outputFileFormat = cmd.getOptionValue("f").trim();
-                if(this.outputFileFormat.compareToIgnoreCase("orc") == 0){
-                    // for ORC set the default compression to none as
-                    this.dataSinkOptions.put("orc.compress","none");
-                }
                 this.tpcdsOptions.format_$eq(this.outputFileFormat);
             }
 
@@ -357,6 +353,17 @@ public class ParseOptions implements Serializable {
         if(this.className.compareToIgnoreCase("tpcds") == 0){
             if(this.tpcdsOptions.dsdgen_dir().compareToIgnoreCase("") == 0){
                 showErrorAndExit("Please set the directory for dsdgen with -tdsd");
+            }
+        }
+
+        if(this.outputFileFormat.compareToIgnoreCase("orc") == 0){
+            // check and set the compression type.
+            // Parquet options are picked up by the spark conf variable
+            // but the ORC options needs to be set on the sink options.
+            if(this.getCompressionType().compareToIgnoreCase("uncompressed") == 0){
+              this.dataSinkOptions.put("orc.compress","none");
+            } else {
+               this.dataSinkOptions.put("orc.compress",this.compressionType);
             }
         }
     }
