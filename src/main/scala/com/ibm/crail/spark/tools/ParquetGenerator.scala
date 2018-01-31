@@ -32,7 +32,6 @@ object ParquetGenerator {
 
   def foo(x: Array[String]) = x.foldLeft("")((a, b) => a + b)
 
-
   def readAndReturnRows(spark: SparkSession, fileName: String, showRows: Int, expectedRows: Long): Unit = {
     if(showRows > 0) {
       /* now we read it back and check */
@@ -54,13 +53,15 @@ object ParquetGenerator {
     val outputRdd = rdd.flatMap { p =>
       val base = new ListBuffer[ParquetExample]()
       /* now we want to generate a loop and save the parquet file */
-      for (a <- 0L until rowsPerTask) {
+      var i = 0L
+      while (i < rowsPerTask) {
         base += ParquetExample(DataGenerator.getNextInt(options.getRangeInt),
           DataGenerator.getNextLong,
           DataGenerator.getNextDouble,
           DataGenerator.getNextFloat,
           DataGenerator.getNextString(options.getVariableSize,
             options.getAffixRandom))
+        i+=1
       }
       base
     }
@@ -74,15 +75,40 @@ object ParquetGenerator {
     readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
   }
 
+
+  private def doHundredCols(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
+    val outputRdd = rdd.flatMap { p =>
+      val base = new ListBuffer[HundredCols]()
+      /* now we want to generate a loop and save the parquet file */
+      var i = 0L
+      while (i < rowsPerTask) {
+        base += HundredCols.makeNext(options.getRangeInt)
+        i+=1
+      }
+      base
+    }
+    import spark.implicits._
+    val outputDS = outputRdd.toDS().repartition(options.getPartitions)
+    outputDS.write
+      .options(options.getDataSinkOptions)
+      .format(options.getOutputFileFormat)
+      .mode(SaveMode.Overwrite)
+      .save(options.getOutput)
+    readAndReturnRows(spark, options.getOutput, options.getShowRows, options.getRowCount)
+  }
+
+
   private def doIntWithPayload(spark:SparkSession, rdd:RDD[Int], rowsPerTask:Int, options:ParseOptions):Unit = {
     val outputRdd = rdd.flatMap { p =>
       val base = new ListBuffer[IntWithPayload]()
       /* now we want to generate a loop and save the parquet file */
       val size = options.getVariableSize
-      for (a <- 0L until rowsPerTask) {
+      var i = 0L
+      while (i < rowsPerTask) {
         base += IntWithPayload(DataGenerator.getNextInt(options.getRangeInt),
           DataGenerator.getNextByteArray(size,
             options.getAffixRandom))
+        i+=1
       }
       base
     }
@@ -101,7 +127,8 @@ object ParquetGenerator {
       val base = new ListBuffer[IntWithPayload2x]()
       /* now we want to generate a loop and save the parquet file */
       val size = options.getVariableSize
-      for (a <- 0L until rowsPerTask) {
+      var i = 0L
+      while (i < rowsPerTask) {
         base += IntWithPayload2x(DataGenerator.getNextInt(options.getRangeInt),
           DataGenerator.getNextByteArray(DataGenerator.getNextInt(size),
             options.getAffixRandom),
@@ -109,6 +136,7 @@ object ParquetGenerator {
           DataGenerator.getNextByteArray(DataGenerator.getNextInt(size),
             options.getAffixRandom),
           DataGenerator.getNextDouble)
+        i+=1
       }
       base
     }
@@ -128,8 +156,11 @@ object ParquetGenerator {
       /* now we want to generate a loop and save the parquet file */
       val size = options.getVariableSize
       val baseInt = DataGenerator.getNextInt
-      for (a <- 0 until rowsPerTask) {
+      var i = 0L
+      var a = 0
+      while (a < rowsPerTask) {
         base(a) = IntOnly((baseInt + a).toInt)
+        a+=1
       }
       base
     }
@@ -149,8 +180,10 @@ object ParquetGenerator {
       val base = new ListBuffer[LongOnly]()
       /* now we want to generate a loop and save the parquet file */
       val size = options.getVariableSize
-      for (a <- 0L until rowsPerTask) {
+      var i = 0L
+      while (i < rowsPerTask) {
         base += LongOnly(DataGenerator.getNextLong)
+        i+=1
       }
       base
     }
@@ -169,8 +202,10 @@ object ParquetGenerator {
       val base = new ListBuffer[DoubleOnly]()
       /* now we want to generate a loop and save the parquet file */
       val size = options.getVariableSize
-      for (a <- 0L until rowsPerTask) {
+      var i = 0L
+      while (i < rowsPerTask) {
         base += DoubleOnly(DataGenerator.getNextDouble)
+        i+=1
       }
       base
     }
@@ -194,6 +229,8 @@ object ParquetGenerator {
       doParquetExample(spark, inputRDD,      rowsPerTask.toInt, options)
     } else if(options.getClassName.equalsIgnoreCase("IntWithPayload")){
       doIntWithPayload(spark, inputRDD,      rowsPerTask.toInt, options)
+    } else if(options.getClassName.equalsIgnoreCase("HundredCols")){
+      doHundredCols(spark, inputRDD,      rowsPerTask.toInt, options)
     } else if(options.getClassName.equalsIgnoreCase("IntWithPayload2x")){
       doIntWithPayload2x(spark, inputRDD,      rowsPerTask.toInt, options)
     } else if (options.getClassName.equalsIgnoreCase("IntOnly")){
