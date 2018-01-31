@@ -21,34 +21,39 @@
 
 package com.ibm.crail.spark.tools
 
+import java.util.concurrent.ThreadLocalRandom
+
 import scala.util.Random
 
 /**
   * Created by atr on 10/5/16.
   */
 object DataGenerator extends Serializable {
-  val random = new Random(System.nanoTime())
+  val scalaRandom = new Random(System.nanoTime())
+
+  //val ThreadLocalRandom.current() = ThreadLocalRandom.current()
+  //ThreadLocalRandom.current().setSeed(System.nanoTime())
 
   /* affix payload variables */
   var affixStringBuilder:StringBuilder = null
   val baseRandomArray:Array[Byte] = new Array[Byte](1024*1024)
-  random.nextBytes(this.baseRandomArray)
+  ThreadLocalRandom.current().nextBytes(this.baseRandomArray)
 
   def getNextString(size: Int, affix: Boolean):String = {
     if(affix){
       this.synchronized {
         if (affixStringBuilder == null) {
           affixStringBuilder = new StringBuilder(
-            random.alphanumeric.take(size).mkString)
+            scalaRandom.alphanumeric.take(size).mkString)
         }
       }
       /* just randomly change 1 byte - this is to make sure parquet
       * does not ignore the data */
-      affixStringBuilder.setCharAt(random.nextInt(size),
-        random.nextPrintableChar())
+      affixStringBuilder.setCharAt(ThreadLocalRandom.current().nextInt(size),
+        scalaRandom.nextPrintableChar())
       affixStringBuilder.mkString
     } else {
-      random.alphanumeric.take(size).mkString
+      scalaRandom.alphanumeric.take(size).mkString
     }
   }
 
@@ -56,7 +61,7 @@ object DataGenerator extends Serializable {
     val toReturn = new Array[Byte](size)
     if(!affix){
       /* if not affix, then return completely new values in a new array */
-      random.nextBytes(toReturn)
+      ThreadLocalRandom.current().nextBytes(toReturn)
     } else {
       /* now we need to fill out the passed array from our source */
       var leftBytes = toReturn.length
@@ -66,7 +71,7 @@ object DataGenerator extends Serializable {
         val toCopy = Math.min(leftBytes, this.baseRandomArray.length)
         /* just randomly change 1 byte - this is to make sure parquet
       * does not ignore the data - char will be casted to byte */
-        this.baseRandomArray(random.nextInt(toCopy)) = random.nextPrintableChar().toByte
+        this.baseRandomArray(ThreadLocalRandom.current().nextInt(toCopy)) = scalaRandom.nextPrintableChar().toByte
         Array.copy(this.baseRandomArray, srcOffset, toReturn, dstOffset, toCopy)
         dstOffset+=toCopy
         srcOffset+= toCopy
@@ -79,23 +84,23 @@ object DataGenerator extends Serializable {
   }
 
   def getNextInt:Int = {
-    random.nextInt()
+    ThreadLocalRandom.current().nextInt()
   }
 
   def getNextInt(max:Int):Int = {
-    random.nextInt(max)
+    ThreadLocalRandom.current().nextInt(max)
   }
 
   def getNextLong:Long= {
-    random.nextLong()
+    ThreadLocalRandom.current().nextLong()
   }
 
   def getNextDouble:Double= {
-    random.nextDouble()
+    ThreadLocalRandom.current().nextDouble()
   }
 
   def getNextFloat: Float = {
-    random.nextFloat()
+    ThreadLocalRandom.current().nextFloat()
   }
 
   def getNextValue(s:String, size: Int, affix:Boolean): String ={
