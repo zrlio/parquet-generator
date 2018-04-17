@@ -48,6 +48,7 @@ public class ParseOptions implements Serializable {
     private String outputFileFormat;
     private Map<String,String> dataSinkOptions;
     private TPCDSOptions tpcdsOptions;
+    private int blockSize;
 
     static <K, V> scala.collection.immutable.Map<K, V> toScalaImmutableMap(java.util.Map<K, V> javaMap) {
         final java.util.List<scala.Tuple2<K, V>> list = new java.util.ArrayList<>(javaMap.size());
@@ -71,6 +72,7 @@ public class ParseOptions implements Serializable {
         this.rangeInt = Integer.MAX_VALUE;
         this.affixRandom = false;
         this.outputFileFormat = "parquet";
+        this.blockSize = -1;
         this.dataSinkOptions = new Hashtable<String, String>();
 
         this.tpcdsOptions = new TPCDSOptions("",
@@ -94,7 +96,7 @@ public class ParseOptions implements Serializable {
                 " variable payload data will be generated once, and used multiple times (default " + this.affixRandom +")");
         options.addOption("r", "rows", true, "<long> total number of rows (default: " + this.rowCount +")");
         options.addOption("c", "case", true, "case class schema currently supported are: \n" +
-                "                             ParquetExample (default), IntWithPayload, and tpcds. \n" +
+                "                             ParquetExample (default), IntWithPayload, IntWithPayload2x, and tpcds. \n" +
                 "                             These classes are in ./schema/ in src.");
         options.addOption("o", "output", true, "<String> the output file name (default: " + this.output+")");
         options.addOption("t", "tasks", true, "<int> number of tasks to generate this data (default: " + this.tasks+")");
@@ -111,6 +113,8 @@ public class ParseOptions implements Serializable {
         options.addOption("f", "format", true, "<String> output format type (e.g., parquet (default), csv, etc.)");
         options.addOption("O", "options", true, "<str,str> key,value strings that will be passed to the data source of spark in writing." +
         " E.g., for parquet you may want to re-consider parquet.block.size. The default is 128MB (the HDFS block size). ");
+
+        options.addOption("bs", "blockSize", true, "[int] to set the block size for file formats that support it, for now it is Parquet and ORC");
 
 //        case class TPCDSOptions(var dsdgen_dir:String = "/home/atr/zrl/external/github/databricks/tpcds-kit/tools/",
 //                var scale_factor:String = "1",
@@ -285,6 +289,9 @@ public class ParseOptions implements Serializable {
             if (cmd.hasOption("t")) {
                 this.tasks = Integer.parseInt(cmd.getOptionValue("t").trim());
             }
+            if (cmd.hasOption("bs")) {
+                this.blockSize = Integer.parseInt(cmd.getOptionValue("bs").trim());
+            }
 
             if (cmd.hasOption("R")) {
                 this.rangeInt = Integer.parseInt(cmd.getOptionValue("R").trim());
@@ -353,6 +360,28 @@ public class ParseOptions implements Serializable {
         if(this.className.compareToIgnoreCase("tpcds") == 0){
             if(this.tpcdsOptions.dsdgen_dir().compareToIgnoreCase("") == 0){
                 showErrorAndExit("Please set the directory for dsdgen with -tdsd");
+            }
+        }
+
+        if(this.outputFileFormat.compareToIgnoreCase("orc") == 0){
+            // check and set the compression type.
+            // Parquet options are picked up by the spark conf variable
+            // but the ORC options needs to be set on the sink options.
+            if(this.getCompressionType().compareToIgnoreCase("uncompressed") == 0){
+              this.dataSinkOptions.put("orc.compress","none");
+            } else {
+               this.dataSinkOptions.put("orc.compress",this.compressionType);
+            }
+        }
+
+        if(this.blockSize != -1){
+            String size = Integer.toString(this.blockSize);
+            if(this.outputFileFormat.compareToIgnoreCase("parquet") == 0) {
+                this.dataSinkOptions.put("parquet.block.size", size);
+            } else if (this.outputFileFormat.compareToIgnoreCase("orc") == 0){
+                this.dataSinkOptions.put("orc.stripe.size", size);
+            } else {
+                throw new IllegalArgumentException("-bs is only supported for ORC and Parquet so far, current format is " + this.outputFileFormat);
             }
         }
     }
